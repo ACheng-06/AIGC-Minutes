@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { ElMessage } from 'element-plus';
 import InputPanel from '../components/InputPanel.vue';
 import MinutesEditor from '../components/MinutesEditor.vue';
 import { ApiError } from '../api/http';
 import { generateByFile, generateByText } from '../api/minutes';
+import { saveRecord } from '../composables/useLocalMinutes';
 import { useMinutesStore } from '../composables/useMinutesStore';
 import type { GenerateInput } from '../types/minutes';
 
-const { state, setResult, setLoading, setError } = useMinutesStore();
+const { state, setResult, setRecordId, setLoading, setError } = useMinutesStore();
 
 async function handleGenerate(input: GenerateInput): Promise<void> {
   setLoading(true);
@@ -15,6 +17,15 @@ async function handleGenerate(input: GenerateInput): Promise<void> {
   try {
     const result = input.type === 'text' ? await generateByText(input.text) : await generateByFile(input.file);
     setResult(result);
+
+    // 生成成功后自动保存一条本地记录；保存失败不影响当前编辑。
+    const saved = saveRecord(result.minutes);
+    if (saved.record) {
+      setRecordId(saved.record.id);
+    }
+    if (saved.error) {
+      ElMessage.warning(saved.error);
+    }
   } catch (error) {
     setError(error instanceof ApiError ? error.message : '生成失败，请稍后重试');
   } finally {

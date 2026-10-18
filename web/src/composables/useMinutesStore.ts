@@ -1,5 +1,5 @@
 import { reactive } from 'vue';
-import type { GenerateResult, Minutes, MinutesMeta } from '../types/minutes';
+import type { GenerateResult, LocalMinutesRecord, Minutes, MinutesMeta } from '../types/minutes';
 
 interface MinutesState {
   minutes: Minutes | null;
@@ -7,6 +7,7 @@ interface MinutesState {
   loading: boolean;
   error: string;
   dirty: boolean;
+  recordId: string | null;
 }
 
 // 模块级单例：工作台与本地记录页共享同一份“当前纪要”，不引入 Pinia。
@@ -16,6 +17,7 @@ const state = reactive<MinutesState>({
   loading: false,
   error: '',
   dirty: false,
+  recordId: null,
 });
 
 function setResult(result: GenerateResult): void {
@@ -23,12 +25,30 @@ function setResult(result: GenerateResult): void {
   state.meta = result.meta;
   state.error = '';
   state.dirty = false;
+  state.recordId = null;
 }
 
 function setMinutes(minutes: Minutes, meta: MinutesMeta | null = null): void {
   state.minutes = minutes;
   state.meta = meta;
   state.error = '';
+  state.dirty = false;
+}
+
+/** 从本地记录载入时复制一份，避免编辑历史列表里的原始对象。 */
+function setLoadedRecord(record: LocalMinutesRecord): void {
+  state.minutes = JSON.parse(JSON.stringify(record.minutes)) as Minutes;
+  state.meta = null;
+  state.error = '';
+  state.dirty = false;
+  state.recordId = record.id;
+}
+
+function setRecordId(id: string | null): void {
+  state.recordId = id;
+}
+
+function markSaved(): void {
   state.dirty = false;
 }
 
@@ -49,6 +69,7 @@ function reset(): void {
   state.meta = null;
   state.error = '';
   state.dirty = false;
+  state.recordId = null;
 }
 
 export function useMinutesStore() {
@@ -56,6 +77,9 @@ export function useMinutesStore() {
     state,
     setResult,
     setMinutes,
+    setLoadedRecord,
+    setRecordId,
+    markSaved,
     setLoading,
     setError,
     markDirty,

@@ -3,13 +3,14 @@ import { ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ApiError } from '../api/http';
 import { exportMinutes } from '../api/minutes';
+import { saveRecord } from '../composables/useLocalMinutes';
 import { useMinutesStore } from '../composables/useMinutesStore';
 import type { Minutes } from '../types/minutes';
 import { copyText } from '../utils/clipboard';
 import { buildExportFileName, downloadBlob } from '../utils/download';
 import { formatMinutesText } from '../utils/formatMinutes';
 
-const { state, markDirty } = useMinutesStore();
+const { state, markDirty, markSaved, setRecordId } = useMinutesStore();
 const exporting = ref(false);
 
 // flush: 'sync' 保证编辑后立即标记“未保存”，不依赖下一次渲染。
@@ -99,6 +100,28 @@ async function handleExport(): Promise<void> {
     exporting.value = false;
   }
 }
+
+/** 手动保存：已有本地记录时覆盖同一条，避免反复点击产生大量重复条目。 */
+function handleSaveLocal(): void {
+  if (!state.minutes) {
+    return;
+  }
+
+  const saved = saveRecord(state.minutes, state.recordId);
+  if (!saved.ok || !saved.record) {
+    ElMessage.error(saved.error ?? '保存失败，请稍后重试');
+    return;
+  }
+
+  setRecordId(saved.record.id);
+  markSaved();
+
+  if (saved.error) {
+    ElMessage.warning(saved.error);
+  } else {
+    ElMessage.success('已保存到本地记录');
+  }
+}
 </script>
 
 <template>
@@ -176,6 +199,7 @@ async function handleExport(): Promise<void> {
     <div class="editor-actions">
       <el-button type="primary" plain @click="handleCopy">复制纪要</el-button>
       <el-button type="primary" :loading="exporting" @click="handleExport">导出 Word</el-button>
+      <el-button :disabled="!state.dirty" @click="handleSaveLocal">保存到本地</el-button>
       <span class="actions-tip">负责人和日期留空时，展示与复制时都会标记为“未明确”</span>
     </div>
   </el-card>
