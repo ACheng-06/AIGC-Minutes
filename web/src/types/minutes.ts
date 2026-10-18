@@ -35,6 +35,9 @@ export interface LocalMinutesRecord {
   minutes: Minutes;
 }
 
+/** 工作台提交给生成流程的两种输入。 */
+export type GenerateInput = { type: 'text'; text: string } | { type: 'file'; file: File };
+
 // 与 server/src/lib/errors.ts 的错误码保持一致，前端额外补充网络错误。
 export type ApiErrorCode =
   | 'VALIDATION_ERROR'
