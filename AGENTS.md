@@ -23,6 +23,7 @@ AIGC Minutes 是一个 AI 会议纪要工具：输入会议原文（粘贴文本
 - 后端：Node.js + Express 4 + TypeScript + Zod + Mammoth + docx
 - AI：任意 OpenAI 兼容接口，`server/src/services/ai.ts` 是唯一模型调用出口
 - 包管理器：npm（提交 `package-lock.json`）
+- API 契约：路由与错误码在 `server/src/routes/minutes.route.ts`，请求/响应结构在 `server/src/schemas/minutes.ts`；前端类型在 `web/src/types/minutes.ts`，两边手工同步。
 
 ```
 server/src/
@@ -114,5 +115,6 @@ npm run dev / typecheck / test / build / preview
 
 ## 10. 当前状态
 
-- 阶段 P0：仓库初始化与规范文件（进行中）。
-- 尚未实现任何业务代码。
+- 后端 P1–P5 已完成：服务骨架、TXT/DOCX 提取、AI 结构化、生成接口、Word 导出。
+- 接口契约已冻结，后端 31 个自动化测试通过（最后核对时间：2026-10-18）。
+- 前端 P6–P10 待实现；P11 补齐边界测试；P12 文档与验收。
