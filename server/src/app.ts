@@ -1,7 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import cors from 'cors';
 import { env } from './env';
 import { AppError } from './lib/errors';
+import { logger } from './lib/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { minutesRouter } from './routes/minutes.route';
 
@@ -27,6 +30,27 @@ export function createApp(): express.Express {
   });
 
   app.use('/api/minutes', minutesRouter);
+
+  // 可选单进程部署：设置 WEB_DIST 指向 web/dist 后，由后端同时托管前端页面。
+  // 未设置或目录不存在时保持纯 API 模式，不影响本地开发。
+  if (env.webDist) {
+    const webDistPath = path.resolve(process.cwd(), env.webDist);
+    const indexHtmlPath = path.join(webDistPath, 'index.html');
+
+    if (fs.existsSync(indexHtmlPath)) {
+      app.use(express.static(webDistPath));
+      app.get('*', (req, res, next) => {
+        // /api 下的未知路径继续交给 404 JSON 处理。
+        if (req.path.startsWith('/api')) {
+          next();
+          return;
+        }
+        res.sendFile(indexHtmlPath);
+      });
+    } else {
+      logger.warn('WEB_DIST 指向的目录不存在，已跳过静态页面托管', { webDist: env.webDist });
+    }
+  }
 
   // 未匹配到任何路由时返回 404，而不是 Express 默认的 HTML 页面。
   app.use((req, _res, next) => {
