@@ -1,8 +1,9 @@
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import { AppError } from '../lib/errors';
 import { upload } from '../middleware/upload';
-import { GenerateTextSchema, toErrorDetails } from '../schemas/minutes';
+import { ExportRequestSchema, GenerateTextSchema, toErrorDetails } from '../schemas/minutes';
 import { extractTextFromFile, prepareMeetingText } from '../services/extractText';
+import { buildMinutesDocx, buildMinutesFileName, DOCX_MIME } from '../services/exportDocx';
 import { generateMinutes } from '../services/minutes';
 
 export const minutesRouter = Router();
@@ -57,5 +58,32 @@ minutesRouter.post(
 
     const result = await generateMinutes(text, source);
     res.json({ data: result });
+  }),
+);
+
+/**
+ * POST /api/minutes/export
+ * 接收前端编辑后的纪要，返回 docx 二进制。
+ * 无状态：不保存文件，也不依赖数据库。
+ */
+minutesRouter.post(
+  '/export',
+  asyncHandler(async (req, res) => {
+    const parsed = ExportRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new AppError('VALIDATION_ERROR', 400, '导出参数不合法', toErrorDetails(parsed.error));
+    }
+
+    const buffer = await buildMinutesDocx(parsed.data.minutes);
+    const fileName = buildMinutesFileName();
+
+    res.setHeader('Content-Type', DOCX_MIME);
+    // filename 提供 ASCII 兜底，filename* 按 RFC 5987 传递中文名。
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="minutes.docx"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+    );
+    res.setHeader('Content-Length', String(buffer.length));
+    res.send(buffer);
   }),
 );

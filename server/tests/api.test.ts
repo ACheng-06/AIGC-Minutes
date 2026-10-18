@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import type { Response as SuperAgentResponse } from 'superagent';
+import mammoth from 'mammoth';
 import { createApp } from '../src/app';
 import { AppError } from '../src/lib/errors';
 import { generateStructuredMinutes } from '../src/services/ai';
@@ -12,6 +14,17 @@ vi.mock('../src/services/ai', () => ({
 
 const mockedGenerate = vi.mocked(generateStructuredMinutes);
 const app = createApp();
+
+/** supertest 默认不把 docx 当二进制解析，这里显式收集响应流。 */
+function binaryParser(
+  response: SuperAgentResponse,
+  done: (error: Error | null, body: Buffer) => void,
+): void {
+  const chunks: Buffer[] = [];
+  response.on('data', (chunk: Buffer) => chunks.push(chunk));
+  response.on('end', () => done(null, Buffer.concat(chunks)));
+  response.on('error', (error: Error) => done(error, Buffer.alloc(0)));
+}
 
 const aiMinutes: Minutes = {
   title: '产品周会',
@@ -157,5 +170,62 @@ describe('POST /api/minutes/generate', () => {
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+});
+
+describe('POST /api/minutes/export', () => {
+  const exportMinutes: Minutes = {
+    title: '产品周会',
+    summary: '会议讨论了 MVP 上线计划。',
+    decisions: ['确认 11 月上线 MVP'],
+    todos: [{ task: '整理接口文档', owner: '', dueDate: '下周五' }],
+  };
+
+  it('返回可被 mammoth 读取的 docx 文件', async () => {
+    const response = await request(app)
+      .post('/api/minutes/export')
+      .send({ minutes: exportMinutes })
+      .buffer(true)
+      .parse(binaryParser);
+
+    expect(response.status).toBe(200);
+    expect(response.headers['content-type']).toContain('wordprocessingml.document');
+    expect(response.headers['content-disposition']).toContain("filename*=UTF-8''");
+    expect(Buffer.isBuffer(response.body)).toBe(true);
+
+    const text = (await mammoth.extractRawText({ buffer: response.body as Buffer })).value;
+    expect(text).toContain('产品周会');
+    expect(text).toContain('会议讨论了 MVP 上线计划');
+    expect(text).toContain('整理接口文档');
+    // 空负责人与自然语言日期都应显示为“未明确”。
+    expect(text).toContain('未明确');
+  });
+
+  it('缺少摘要时返回 400', async () => {
+    const response = await request(app)
+      .post('/api/minutes/export')
+      .send({ minutes: { ...exportMinutes, summary: '' } });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('决策超过 20 条时返回 400', async () => {
+    const decisions = Array.from({ length: 21 }, (_item, index) => `决策 ${index + 1}`);
+
+    const response = await request(app)
+      .post('/api/minutes/export')
+      .send({ minutes: { ...exportMinutes, decisions } });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('缺少 minutes 字段时返回 400', async () => {
+    const response = await request(app).post('/api/minutes/export').send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.details[0].path).toBe('minutes');
   });
 });
