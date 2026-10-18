@@ -1,0 +1,107 @@
+:root {
+  color-scheme: light;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  color: #303133;
+  background: #f5f7fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f5f7fa;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.app-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.brand p {
+  margin: 2px 0 0;
+  color: #909399;
+  font-size: 13px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #409eff;
+  color: #fff;
+  font-weight: 700;
+}
+
+.app-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.app-nav a {
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: #606266;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.app-nav a.router-link-active {
+  background: #ecf5ff;
+  color: #409eff;
+  font-weight: 600;
+}
+
+.app-alert {
+  margin-bottom: 16px;
+}
+
+.app-main {
+  min-height: 320px;
+}
+
+.app-footer {
+  margin-top: 32px;
+  text-align: center;
+  color: #a8abb2;
+  font-size: 12px;
+}
+
+.placeholder-card {
+  border-radius: 12px;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 16px 12px 32px;
+  }
+}
