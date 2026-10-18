@@ -37,11 +37,16 @@ server/src/
   lib/              错误类型、日志
 web/src/
   api/              axios 实例与接口函数
-  components/       InputPanel、MinutesEditor
+  components/       SiteHeader、SiteFooter、InputPanel、SourcePanel、MinutesPreview、MinutesEditor
   composables/      useMinutesStore、useLocalMinutes
-  views/            WorkbenchView、HistoryView
+  views/            HomeView、WorkspaceView、HistoryView
+  styles/           tokens.css、main.css
+  router/           三页路由与页面标题
   utils/            formatMinutes、download
+docs/design/        UI/UX 设计规范
 ```
+
+UI 设计规范：`docs/design/ui-ux-spec.md`。颜色、字体、间距等视觉值只从 `web/src/styles/tokens.css` 读取，组件里不写死颜色。
 
 ## 3. 常用命令
 
@@ -115,9 +120,10 @@ npm run dev / typecheck / test / build / preview
 
 ## 10. 当前状态
 
-- P0–P12 已全部完成，MVP 可在本地运行并支持单进程静态部署。
+- P0–P12 与三页 UI/UX 升级（D1–D4）已完成，MVP 可在本地运行并支持单进程静态部署。
+- 页面路由：`/` 首页、`/workspace` 工作台、`/history` 本地记录；设计规范在 `docs/design/ui-ux-spec.md`。
 - 公开仓库：https://github.com/ACheng-06/aigc-minutes（MIT 许可证）。
 - 后端 47 个自动化测试、前端 13 个自动化测试通过；双端 typecheck 与 build 通过（最后核对：2026-10-18）。
-- 单进程部署（`WEB_DIST`）已实测：页面、SPA 路由、健康检查、API 404 均正常。
+- 单进程部署（`WEB_DIST`）曾实测页面、SPA 路由、健康检查、API 404；三页新界面的浏览器截图/点击验证尚未自动化。
 - 尚未执行真实模型调用：需要项目所有者配置 `server/.env` 后按 README 的「真实模型冒烟」清单手动验证。
 - 后续改动请继续遵守本文件的范围、类型同步、测试与 Git 规范。

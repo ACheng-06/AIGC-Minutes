@@ -2,11 +2,12 @@
 
 AIGC Minutes 是一个 AI 会议纪要生成与整理工具：粘贴会议原文或上传 TXT/DOCX 文件，后端提取文本并调用大语言模型，整理为结构化纪要（会议摘要、关键决策、待办事项），支持在线编辑、复制和导出 Word。
 
-> 当前状态：MVP 已完成。后端 47 个自动化测试、前端 13 个自动化测试通过，双端构建成功；真实模型调用需要你自行配置 API Key 后验证。
+> 当前状态：MVP 与三页 UI/UX 升级已完成。后端 47 个、前端 13 个自动化测试通过，双端构建成功；真实模型调用需要你自行配置 API Key 后验证。
 
 ## 功能
 
-- [x] 工作台：粘贴文本，或上传单个 `.txt` / `.docx`（≤ 5MB）
+- [x] 三页结构：`/` 首页、`/workspace` 工作台、`/history` 本地记录
+- [x] 工作台：左侧粘贴文本或上传单个 `.txt` / `.docx`（≤ 5MB），右侧编辑纪要
 - [x] 调用任意 OpenAI 兼容接口生成结构化纪要
 - [x] 编辑标题、摘要、关键决策、待办（任务 / 负责人 / 截止日期）
 - [x] 缺失的负责人或日期显示「未明确」，不编造
@@ -28,10 +29,19 @@ AIGC Minutes 是一个 AI 会议纪要生成与整理工具：粘贴会议原文
 | 测试 | Vitest、Supertest、@vue/test-utils（jsdom） |
 | 包管理 | npm（提交 `package-lock.json`） |
 
+## 页面结构
+
+- `/`：首页。说明产品价值、展示“原文 → 摘要 / 决策 / 待办”的结构示例，并提供进入工作台的入口；不放输入框。
+- `/workspace`：工作台。桌面端左侧输入或原文参考，右侧编辑纪要；窄屏上下堆叠。
+- `/history`：本地记录。以档案索引展示最近 10 条纪要，支持载入、单条删除和清空。
+
+完整设计规范（颜色、字体、间距、组件状态、响应式与验收）见 [`docs/design/ui-ux-spec.md`](docs/design/ui-ux-spec.md)。
+
 ## 目录结构
 
 ```
 AIGC Minutes/
+├── docs/design/ui-ux-spec.md # 编辑部工作纸方向的设计规范
 ├── server/
 │   ├── .env.example          # 后端环境变量模板（无真实密钥）
 │   ├── src/
@@ -48,9 +58,11 @@ AIGC Minutes/
 │   ├── .env.example          # 前端环境变量模板
 │   └── src/
 │       ├── api/              # axios 实例与接口函数
-│       ├── components/       # InputPanel、MinutesEditor
+│       ├── components/       # 站点头尾、输入/原文、纪要预览与编辑器
 │       ├── composables/      # 当前纪要状态、localStorage 历史
-│       ├── views/            # 工作台、本地记录
+│       ├── views/            # HomeView、WorkspaceView、HistoryView
+│       ├── styles/           # tokens.css、main.css
+│       ├── router/           # 三页路由与标题
 │       ├── utils/            # 复制、文本格式化、下载、文件名
 │       ├── types/            # 与后端手工同步的类型
 │       └── constants.ts      # 输入限制与存储 key
@@ -125,7 +137,7 @@ Vite 已把 `/api` 代理到 `http://localhost:3000`，开发时无需处理跨�
 curl.exe http://localhost:3000/api/health
 ```
 
-浏览器打开 `http://localhost:5173`，粘贴会议文本或上传文件，点击「生成纪要」。
+浏览器打开 `http://localhost:5173` 查看首页，点击「打开工作台」进入 `/workspace`；粘贴会议文本或上传文件后点击「生成纪要」。
 
 ## 环境变量
 
@@ -263,7 +275,7 @@ npm run preview
 
 - 后端 `typecheck`、`build` 通过；`npm test` 共 **5 个文件 / 47 个用例**通过。
 - 前端 `typecheck`、`build` 通过；`npm test` 共 **3 个文件 / 13 个用例**通过。
-- 单进程部署实测：`/`、`/history` 返回页面，`/api/health` 正常，未知 `/api` 路径返回 JSON 404。
+- 单进程部署曾实测：`/`、`/history` 返回页面，`/api/health` 正常，未知 `/api` 路径返回 JSON 404；三页新界面的浏览器截图/点击验证尚未自动化。
 
 覆盖范围：Zod 归一化、TXT/DOCX 提取（含 GBK、损坏文件）、AI JSON 解析与一次修复、超时/上游异常、输入校验、文件大小、导出 docx、localStorage 上限与配额异常。
 
@@ -304,7 +316,7 @@ npm start
 
 ## 已知限制
 
-- Element Plus 采用全量引入，构建产物约 1.1MB（gzip 约 360KB）；MVP 优先可读性，后续可改按需引入。
+- Element Plus 采用全量引入，主 JS 约 1.04MB（gzip 约 342KB），构建会提示超过 500KB；MVP 优先可读性，后续可改按需引入。
 - 不做流式输出，生成期间需要等待 10–60 秒。
 - 不做长文档分块，输入上限 30000 字符；超出会明确报错，不会静默截断。
 - localStorage 最多 10 条，共用电脑时请及时清空。
