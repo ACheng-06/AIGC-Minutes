@@ -2,7 +2,8 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 
 // 先加载 .env，再读取 process.env。真实密钥只存放在这个文件里，且已被 .gitignore 忽略。
-dotenv.config();
+// quiet 关闭 dotenv 的注入提示，避免测试输出被无关日志干扰。
+dotenv.config({ quiet: true });
 
 const EnvSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
