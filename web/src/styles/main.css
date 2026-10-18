@@ -1,107 +1,241 @@
-:root {
-  color-scheme: light;
-  font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
-  color: #303133;
-  background: #f5f7fa;
+/* 全局基础样式：只放 reset、排版、焦点和可复用控件，不写页面布局。 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-* {
-  box-sizing: border-box;
+html {
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background: #f5f7fa;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
 }
 
 #app {
   min-height: 100vh;
 }
 
-.app-shell {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px 20px 48px;
-}
-
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand h1 {
+h1,
+h2,
+h3,
+h4 {
   margin: 0;
-  font-size: 20px;
+  color: var(--color-fg);
+  line-height: var(--line-height-heading);
+  text-wrap: balance;
 }
 
-.brand p {
-  margin: 2px 0 0;
-  color: #909399;
-  font-size: 13px;
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--font-size-h1);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: #409eff;
-  color: #fff;
-  font-weight: 700;
-}
-
-.app-nav {
-  display: flex;
-  gap: 8px;
-}
-
-.app-nav a {
-  padding: 8px 14px;
-  border-radius: 8px;
-  color: #606266;
-  font-size: 14px;
-  text-decoration: none;
-}
-
-.app-nav a.router-link-active {
-  background: #ecf5ff;
-  color: #409eff;
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--font-size-h2);
   font-weight: 600;
 }
 
-.app-alert {
-  margin-bottom: 16px;
+h3 {
+  font-size: var(--font-size-h3);
+  font-weight: 600;
 }
 
-.app-main {
-  min-height: 320px;
+p {
+  margin: 0;
 }
 
-.app-footer {
-  margin-top: 32px;
-  text-align: center;
-  color: #a8abb2;
-  font-size: 12px;
+a {
+  color: var(--color-primary);
+  text-underline-offset: 0.18em;
 }
 
-.placeholder-card {
-  border-radius: 12px;
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+pre {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-fg);
+}
+
+/* 键盘焦点始终可见；不要用 outline: none 去掉。 */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+main:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
+}
+
+/*
+ * 跳转链接默认视觉隐藏，键盘聚焦时出现在左上角。
+ * 这是全站唯一的“跳过导航”入口。
+ */
+.skip-link {
+  position: fixed;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 1000;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--content-home);
+  margin: 0 auto;
+  padding-inline: var(--content-pad);
+}
+
+.page-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.page-heading h1 {
+  font-size: var(--font-size-h1);
+}
+
+.page-heading p {
+  max-width: 62ch;
+  color: var(--color-fg-muted);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--color-fg-strong);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+/* 可复用按钮；Element Plus 按钮另行按 token 覆盖。 */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.button-primary {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--white);
+}
+
+.button-primary:hover {
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
+  color: var(--white);
+}
+
+.button-secondary {
+  border-color: var(--color-border);
+  background: transparent;
+  color: var(--color-fg);
+}
+
+.button-secondary:hover {
+  border-color: var(--color-fg-muted);
+  background: var(--color-surface-subtle);
+  color: var(--color-fg);
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.text-link:hover {
+  color: var(--color-primary-hover);
 }
 
 @media (max-width: 640px) {
-  .app-shell {
-    padding: 16px 12px 32px;
+  :root {
+    --font-size-h1: 1.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

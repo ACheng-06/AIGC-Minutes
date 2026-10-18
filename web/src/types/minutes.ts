@@ -38,6 +38,17 @@ export interface LocalMinutesRecord {
 /** 工作台提交给生成流程的两种输入。 */
 export type GenerateInput = { type: 'text'; text: string } | { type: 'file'; file: File };
 
+/**
+ * 当前生成用的原文快照。
+ * 文件只记录名称和字符数，不把二进制塞进 store。
+ */
+export interface SourceSnapshot {
+  kind: 'text' | 'file';
+  text: string;
+  fileName: string | null;
+  charCount: number;
+}
+
 // 与 server/src/lib/errors.ts 的错误码保持一致，前端额外补充网络错误。
 export type ApiErrorCode =
   | 'VALIDATION_ERROR'

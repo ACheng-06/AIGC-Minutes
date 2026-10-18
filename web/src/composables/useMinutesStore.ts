@@ -1,9 +1,16 @@
 import { reactive } from 'vue';
-import type { GenerateResult, LocalMinutesRecord, Minutes, MinutesMeta } from '../types/minutes';
+import type {
+  GenerateResult,
+  LocalMinutesRecord,
+  Minutes,
+  MinutesMeta,
+  SourceSnapshot,
+} from '../types/minutes';
 
 interface MinutesState {
   minutes: Minutes | null;
   meta: MinutesMeta | null;
+  source: SourceSnapshot | null;
   loading: boolean;
   error: string;
   dirty: boolean;
@@ -14,6 +21,7 @@ interface MinutesState {
 const state = reactive<MinutesState>({
   minutes: null,
   meta: null,
+  source: null,
   loading: false,
   error: '',
   dirty: false,
@@ -23,6 +31,7 @@ const state = reactive<MinutesState>({
 function setResult(result: GenerateResult): void {
   state.minutes = result.minutes;
   state.meta = result.meta;
+  state.source = null;
   state.error = '';
   state.dirty = false;
   state.recordId = null;
@@ -31,6 +40,7 @@ function setResult(result: GenerateResult): void {
 function setMinutes(minutes: Minutes, meta: MinutesMeta | null = null): void {
   state.minutes = minutes;
   state.meta = meta;
+  state.source = null;
   state.error = '';
   state.dirty = false;
 }
@@ -39,9 +49,18 @@ function setMinutes(minutes: Minutes, meta: MinutesMeta | null = null): void {
 function setLoadedRecord(record: LocalMinutesRecord): void {
   state.minutes = JSON.parse(JSON.stringify(record.minutes)) as Minutes;
   state.meta = null;
+  state.source = null;
   state.error = '';
   state.dirty = false;
   state.recordId = record.id;
+}
+
+function setSource(source: SourceSnapshot): void {
+  state.source = source;
+}
+
+function clearSource(): void {
+  state.source = null;
 }
 
 function setRecordId(id: string | null): void {
@@ -67,6 +86,7 @@ function markDirty(): void {
 function reset(): void {
   state.minutes = null;
   state.meta = null;
+  state.source = null;
   state.error = '';
   state.dirty = false;
   state.recordId = null;
@@ -78,6 +98,8 @@ export function useMinutesStore() {
     setResult,
     setMinutes,
     setLoadedRecord,
+    setSource,
+    clearSource,
     setRecordId,
     markSaved,
     setLoading,

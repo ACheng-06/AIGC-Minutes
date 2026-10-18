@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { computed, ref, watch } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { ApiError } from '../api/http';
 import { exportMinutes } from '../api/minutes';
 import { saveRecord } from '../composables/useLocalMinutes';
@@ -12,6 +12,17 @@ import { formatMinutesText } from '../utils/formatMinutes';
 
 const { state, markDirty, markSaved, setRecordId } = useMinutesStore();
 const exporting = ref(false);
+const liveMessage = ref('');
+
+const statusText = computed(() => {
+  if (state.dirty) {
+    return '有未保存修改';
+  }
+  if (state.recordId) {
+    return '已保存到本地';
+  }
+  return '已生成';
+});
 
 // flush: 'sync' 保证编辑后立即标记“未保存”，不依赖下一次渲染。
 watch(
@@ -42,9 +53,29 @@ function addTodo(): void {
   markDirty();
 }
 
-function removeTodo(index: number): void {
+async function removeTodo(index: number): Promise<void> {
+  const todo = state.minutes?.todos[index];
+  if (!todo) {
+    return;
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定删除“${todo.task.trim() || '未命名待办'}”吗？`,
+      '删除待办',
+      {
+        type: 'warning',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+      },
+    );
+  } catch {
+    return;
+  }
+
   state.minutes?.todos.splice(index, 1);
   markDirty();
+  liveMessage.value = '已删除该条待办';
 }
 
 async function handleCopy(): Promise<void> {
@@ -54,6 +85,7 @@ async function handleCopy(): Promise<void> {
 
   try {
     await copyText(formatMinutesText(state.minutes));
+    liveMessage.value = '已复制到剪贴板';
     ElMessage.success('已复制到剪贴板');
   } catch {
     ElMessage.error('复制失败，请手动选择文本复制');
@@ -93,6 +125,7 @@ async function handleExport(): Promise<void> {
   try {
     const blob = await exportMinutes(payload);
     downloadBlob(blob, buildExportFileName(payload.title));
+    liveMessage.value = 'Word 文档已开始下载';
     ElMessage.success('Word 文档已开始下载');
   } catch (error) {
     ElMessage.error(error instanceof ApiError ? error.message : '导出失败，请稍后重试');
@@ -115,6 +148,7 @@ function handleSaveLocal(): void {
 
   setRecordId(saved.record.id);
   markSaved();
+  liveMessage.value = '已保存到本地记录';
 
   if (saved.error) {
     ElMessage.warning(saved.error);
@@ -125,158 +159,343 @@ function handleSaveLocal(): void {
 </script>
 
 <template>
-  <el-card v-if="state.minutes" shadow="never" class="editor-card">
-    <template #header>
-      <div class="editor-header">
-        <el-input
-          v-model="state.minutes.title"
-          class="title-input"
-          maxlength="100"
-          placeholder="纪要标题"
-        />
-        <el-tag v-if="state.dirty" type="warning" size="small">有未保存修改</el-tag>
-        <el-tag v-else type="success" size="small">已生成</el-tag>
+  <section v-if="state.minutes" class="editor-sheet" :aria-busy="exporting">
+    <header class="editor-header">
+      <label class="sr-only" for="minutes-title">纪要标题</label>
+      <el-input
+        id="minutes-title"
+        v-model="state.minutes.title"
+        class="title-input"
+        maxlength="100"
+        placeholder="纪要标题"
+      />
+      <span class="status-tag" :class="{ 'is-dirty': state.dirty }">{{ statusText }}</span>
+    </header>
+
+    <p v-if="state.meta" class="editor-meta">
+      {{ state.meta.sourceType === 'file' ? state.meta.fileName ?? '上传文件' : '粘贴文本' }} ·
+      {{ state.meta.charCount.toLocaleString('zh-CN') }} 字符
+    </p>
+    <p class="sr-only" aria-live="polite">{{ liveMessage }}</p>
+
+    <section class="editor-section" aria-labelledby="summary-heading">
+      <div class="section-heading">
+        <h3 id="summary-heading">会议摘要</h3>
       </div>
-    </template>
+      <label class="sr-only" for="minutes-summary">会议摘要</label>
+      <el-input
+        id="minutes-summary"
+        v-model="state.minutes.summary"
+        type="textarea"
+        :autosize="{ minRows: 4, maxRows: 12 }"
+        maxlength="20000"
+        show-word-limit
+        placeholder="会议摘要"
+      />
+    </section>
 
-    <h3>会议摘要</h3>
-    <el-input
-      v-model="state.minutes.summary"
-      type="textarea"
-      :autosize="{ minRows: 4, maxRows: 12 }"
-      maxlength="20000"
-      show-word-limit
-      placeholder="会议摘要"
-    />
-
-    <div class="section-heading">
-      <h3>关键决策</h3>
-      <el-button link type="primary" @click="addDecision">+ 添加决策</el-button>
-    </div>
-    <div v-if="state.minutes.decisions.length" class="decision-list">
-      <div v-for="(decision, index) in state.minutes.decisions" :key="index" class="decision-row">
-        <span class="decision-index">{{ index + 1 }}.</span>
-        <el-input v-model="state.minutes.decisions[index]" placeholder="描述一条关键决策" />
-        <el-button link type="danger" @click="removeDecision(index)">删除</el-button>
+    <section class="editor-section" aria-labelledby="decisions-heading">
+      <div class="section-heading">
+        <h3 id="decisions-heading">关键决策</h3>
+        <el-button link type="primary" @click="addDecision">+ 添加决策</el-button>
       </div>
-    </div>
-    <p v-else class="empty-text">暂无关键决策。</p>
 
-    <div class="section-heading">
-      <h3>待办事项</h3>
-      <el-button link type="primary" @click="addTodo">+ 添加待办</el-button>
-    </div>
-    <el-table v-if="state.minutes.todos.length" :data="state.minutes.todos" size="small">
-      <el-table-column label="任务" min-width="200">
-        <template #default="{ row }">
-          <el-input v-model="row.task" placeholder="任务描述" />
-        </template>
-      </el-table-column>
-      <el-table-column label="负责人" width="150">
-        <template #default="{ row }">
-          <el-input v-model="row.owner" placeholder="未明确" />
-        </template>
-      </el-table-column>
-      <el-table-column label="截止时间" width="170">
-        <template #default="{ row }">
-          <el-date-picker
-            v-model="row.dueDate"
-            type="date"
-            value-format="YYYY-MM-DD"
-            placeholder="未明确"
-            style="width: 100%"
+      <div v-if="state.minutes.decisions.length" class="decision-list">
+        <div v-for="(decision, index) in state.minutes.decisions" :key="index" class="decision-row">
+          <span class="decision-index" aria-hidden="true">{{ index + 1 }}.</span>
+          <input
+            v-model="state.minutes.decisions[index]"
+            class="line-input"
+            type="text"
+            :aria-label="`第 ${index + 1} 条关键决策`"
+            placeholder="描述一条关键决策"
           />
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="80">
-        <template #default="{ $index }">
-          <el-button link type="danger" @click="removeTodo($index)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <p v-else class="empty-text">暂无待办事项。</p>
+          <el-button link type="danger" :aria-label="`删除第 ${index + 1} 条决策`" @click="removeDecision(index)">
+            删除
+          </el-button>
+        </div>
+      </div>
+      <p v-else class="empty-state">还没有关键决策。点击“添加决策”记录一条。</p>
+    </section>
+
+    <section class="editor-section" aria-labelledby="todos-heading">
+      <div class="section-heading">
+        <h3 id="todos-heading">待办事项</h3>
+        <el-button link type="primary" @click="addTodo">+ 添加待办</el-button>
+      </div>
+
+      <div v-if="state.minutes.todos.length" class="todo-table-wrap">
+        <el-table class="todo-table" :data="state.minutes.todos" size="small">
+          <el-table-column label="任务" min-width="260">
+            <template #default="{ row, $index }">
+              <el-input v-model="row.task" :aria-label="`第 ${$index + 1} 条待办的任务`" placeholder="任务描述" />
+            </template>
+          </el-table-column>
+          <el-table-column label="负责人" min-width="180">
+            <template #default="{ row, $index }">
+              <el-input v-model="row.owner" :aria-label="`第 ${$index + 1} 条待办的负责人`" placeholder="未明确" />
+            </template>
+          </el-table-column>
+          <el-table-column label="截止时间" min-width="170">
+            <template #default="{ row, $index }">
+              <el-date-picker
+                v-model="row.dueDate"
+                type="date"
+                value-format="YYYY-MM-DD"
+                placeholder="未明确"
+                :aria-label="`第 ${$index + 1} 条待办的截止时间`"
+                style="width: 100%"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="92">
+            <template #default="{ $index }">
+              <el-button
+                link
+                type="danger"
+                class="row-delete"
+                :aria-label="`删除第 ${$index + 1} 条待办`"
+                @click="removeTodo($index)"
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <p v-else class="empty-state">还没有待办事项。点击“添加待办”创建一条。</p>
+    </section>
 
     <div class="editor-actions">
-      <el-button type="primary" plain @click="handleCopy">复制纪要</el-button>
-      <el-button type="primary" :loading="exporting" @click="handleExport">导出 Word</el-button>
-      <el-button :disabled="!state.dirty" @click="handleSaveLocal">保存到本地</el-button>
-      <span class="actions-tip">负责人和日期留空时，展示与复制时都会标记为“未明确”</span>
+      <div class="action-buttons">
+        <el-button type="primary" plain @click="handleCopy">复制纪要</el-button>
+        <el-button type="primary" :loading="exporting" @click="handleExport">导出 Word</el-button>
+        <el-button :disabled="!state.dirty" @click="handleSaveLocal">保存到本地</el-button>
+      </div>
+      <p class="actions-tip">负责人和日期留空时，展示与复制时都会标记为“未明确”。</p>
     </div>
-  </el-card>
+  </section>
 </template>
 
 <style scoped>
-.editor-card {
-  border-radius: 12px;
+.editor-sheet {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .editor-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .title-input {
-  max-width: 420px;
+  flex: 1;
+  min-width: 0;
+}
+
+.title-input :deep(.el-input__wrapper) {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.title-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 1px 0 var(--color-primary);
 }
 
 .title-input :deep(.el-input__inner) {
-  font-size: 16px;
+  height: 44px;
+  color: var(--color-fg);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 600;
 }
 
-h3 {
-  margin: 20px 0 8px;
-  font-size: 15px;
+.status-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 3px 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
 }
 
-h3:first-of-type {
-  margin-top: 0;
+.status-tag.is-dirty {
+  border-color: var(--color-warning);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.editor-meta {
+  margin-top: var(--space-2);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+}
+
+.editor-section {
+  padding-top: var(--space-4);
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.editor-section:first-of-type {
+  margin-top: var(--space-4);
 }
 
 .section-heading {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
 .section-heading h3 {
-  margin-bottom: 8px;
+  font-size: var(--font-size-h3);
 }
 
 .decision-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .decision-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: var(--space-2);
   align-items: center;
-  gap: 8px;
 }
 
 .decision-index {
-  width: 24px;
-  color: #909399;
-  font-size: 13px;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
 }
 
-.empty-text {
-  margin: 0;
-  color: #a8abb2;
-  font-size: 13px;
+.line-input {
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-fg);
+  font-size: var(--font-size-body);
+}
+
+.line-input::placeholder {
+  color: var(--color-fg-muted);
+}
+
+.line-input:focus-visible {
+  border-bottom-color: var(--color-primary);
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.empty-state {
+  padding: var(--space-3) 0;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-small);
+}
+
+.todo-table-wrap {
+  overflow-x: auto;
+}
+
+.todo-table {
+  min-width: 720px;
+}
+
+.todo-table :deep(th.el-table__cell) {
+  background: var(--color-surface-subtle);
+  color: var(--color-fg-muted);
+  font-weight: 600;
+}
+
+.todo-table :deep(td.el-table__cell) {
+  border-bottom-color: var(--color-border);
+}
+
+.todo-table :deep(.el-input__wrapper) {
+  padding: 2px 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.todo-table :deep(.el-input__wrapper:hover) {
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+.todo-table :deep(.el-input__wrapper.is-focus) {
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.todo-table :deep(.el-date-editor) {
+  width: 100%;
+}
+
+.row-delete {
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 8px;
 }
 
 .editor-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin-top: 24px;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  margin-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.action-buttons :deep(.el-button) {
+  min-height: 44px;
 }
 
 .actions-tip {
-  color: #a8abb2;
-  font-size: 12px;
+  max-width: 38ch;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+}
+
+@media (max-width: 720px) {
+  .editor-sheet {
+    padding: var(--space-4);
+  }
+
+  .editor-header {
+    flex-direction: column;
+  }
+
+  .title-input :deep(.el-input__inner) {
+    font-size: 1.3rem;
+  }
+
+  .editor-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .action-buttons {
+    width: 100%;
+  }
 }
 </style>

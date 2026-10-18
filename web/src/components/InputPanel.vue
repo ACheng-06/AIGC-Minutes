@@ -4,14 +4,14 @@ import type { UploadFile, UploadInstance } from 'element-plus';
 import { ACCEPTED_FILE_EXTENSIONS, MAX_FILE_SIZE_MB, MAX_TEXT_CHARS } from '../constants';
 import type { GenerateInput } from '../types/minutes';
 
-defineProps<{ loading: boolean }>();
+const props = defineProps<{ loading: boolean; initialText?: string }>();
 
 const emit = defineEmits<{
   generate: [payload: GenerateInput];
 }>();
 
 const activeTab = ref<'text' | 'file'>('text');
-const text = ref('');
+const text = ref(props.initialText ?? '');
 const selectedFile = ref<File | null>(null);
 const fileList = ref<UploadFile[]>([]);
 const errorMessage = ref('');
@@ -91,23 +91,40 @@ function submit(): void {
 </script>
 
 <template>
-  <el-card shadow="never" class="input-card">
+  <section class="input-panel" :aria-busy="loading" aria-labelledby="input-title">
+    <div class="panel-heading">
+      <h2 id="input-title">输入会议原文</h2>
+      <p>粘贴文本，或上传一个 TXT、DOCX 文件。原文越完整，整理结果越可靠。</p>
+    </div>
+
     <el-tabs v-model="activeTab">
       <el-tab-pane label="粘贴文本" name="text">
+        <label class="field-label" for="meeting-text">会议原文</label>
         <el-input
+          id="meeting-text"
           v-model="text"
+          name="meeting-text"
+          autocomplete="off"
           type="textarea"
-          :rows="10"
+          :rows="12"
           resize="vertical"
           :disabled="loading"
+          aria-describedby="meeting-text-help"
+          :aria-invalid="text.length > MAX_TEXT_CHARS"
           placeholder="把会议记录粘贴到这里，例如：讨论了什么、达成了哪些结论、谁负责哪些后续事项……"
         />
-        <div class="char-count" :class="{ 'is-over': text.length > MAX_TEXT_CHARS }">
+        <div
+          id="meeting-text-help"
+          class="char-count"
+          :class="{ 'is-over': text.length > MAX_TEXT_CHARS }"
+          :aria-live="text.length > MAX_TEXT_CHARS ? 'polite' : 'off'"
+        >
           {{ text.length }} / {{ MAX_TEXT_CHARS }} 字符
         </div>
       </el-tab-pane>
 
       <el-tab-pane label="上传文件" name="file">
+        <p id="file-hint" class="file-hint">支持 TXT、DOCX，单个文件不超过 {{ MAX_FILE_SIZE_MB }}MB。</p>
         <el-upload
           ref="uploadRef"
           drag
@@ -122,7 +139,7 @@ function submit(): void {
         >
           <div class="upload-text">
             <p>拖拽文件到此处，或 <em>点击选择</em></p>
-            <p class="upload-hint">支持 TXT、DOCX，单个文件不超过 {{ MAX_FILE_SIZE_MB }}MB</p>
+            <p class="upload-hint">一次只能上传一个文件；旧版 .doc 请先另存为 .docx。</p>
           </div>
         </el-upload>
       </el-tab-pane>
@@ -134,32 +151,79 @@ function submit(): void {
       type="error"
       :closable="false"
       show-icon
+      role="alert"
       :title="errorMessage"
     />
 
     <div class="input-actions">
-      <el-button type="primary" size="large" :loading="loading" @click="submit">
+      <el-button type="primary" size="large" class="generate-button" :loading="loading" @click="submit">
         生成纪要
       </el-button>
-      <span class="action-tip">生成通常需要 10–60 秒，请耐心等待</span>
+      <p class="action-tip">生成通常需要 10–60 秒；请保持页面打开。</p>
     </div>
-  </el-card>
+  </section>
 </template>
 
 <style scoped>
-.input-card {
-  border-radius: 12px;
+.input-panel {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.panel-heading {
+  margin-bottom: var(--space-5);
+}
+
+.panel-heading h2 {
+  font-size: var(--font-size-h2);
+}
+
+.panel-heading p {
+  margin-top: var(--space-2);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-small);
+}
+
+.input-panel :deep(.el-tabs__header) {
+  margin-bottom: var(--space-4);
+}
+
+.input-panel :deep(.el-tabs__item) {
+  min-height: 44px;
+  font-size: var(--font-size-small);
+}
+
+.input-panel :deep(.el-textarea__inner) {
+  font-size: var(--font-size-body);
+  line-height: 1.75;
+}
+
+.input-panel :deep(.el-upload-dragger) {
+  padding: var(--space-6) var(--space-4);
+  border-color: var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.input-panel :deep(.el-upload-dragger:hover) {
+  border-color: var(--color-primary);
+}
+
+.file-hint {
+  margin-bottom: var(--space-3);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
 }
 
 .char-count {
-  margin-top: 6px;
+  margin-top: var(--space-2);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
   text-align: right;
-  color: #909399;
-  font-size: 12px;
 }
 
 .char-count.is-over {
-  color: #f56c6c;
+  color: var(--color-danger);
   font-weight: 600;
 }
 
@@ -167,25 +231,48 @@ function submit(): void {
   margin: 0;
 }
 
+.upload-text em {
+  color: var(--color-primary);
+  font-style: normal;
+  font-weight: 600;
+}
+
 .upload-hint {
-  margin-top: 6px !important;
-  color: #909399;
-  font-size: 12px;
+  margin-top: var(--space-2) !important;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
 }
 
 .input-error {
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 .input-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: var(--space-3) var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.input-actions :deep(.el-button) {
+  min-height: 44px;
 }
 
 .action-tip {
-  color: #a8abb2;
-  font-size: 12px;
+  max-width: 36ch;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+}
+
+@media (max-width: 640px) {
+  .input-panel {
+    padding: var(--space-4);
+  }
+
+  .input-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 </style>
