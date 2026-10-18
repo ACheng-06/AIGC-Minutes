@@ -95,6 +95,22 @@ describe('generateStructuredMinutes', () => {
     await expect(promise).rejects.toMatchObject({ code: 'AI_UPSTREAM_ERROR', status: 502 });
   });
 
+  it('上游返回非 JSON 响应时抛出 AI_UPSTREAM_ERROR', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response('<html>gateway error</html>', { status: 200, headers: { 'Content-Type': 'text/html' } }),
+    );
+    const promise = generateStructuredMinutes('会议原文', { config, fetchImpl });
+
+    await expect(promise).rejects.toMatchObject({ code: 'AI_UPSTREAM_ERROR', status: 502 });
+  });
+
+  it('上游返回空内容时抛出 AI_UPSTREAM_ERROR', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(completion('   '));
+    const promise = generateStructuredMinutes('会议原文', { config, fetchImpl });
+
+    await expect(promise).rejects.toMatchObject({ code: 'AI_UPSTREAM_ERROR', status: 502 });
+  });
+
   it('超时后抛出 AI_TIMEOUT', async () => {
     const hangingFetch = vi.fn<typeof fetch>().mockImplementation((_input, init) => {
       return new Promise<Response>((_resolve, reject) => {

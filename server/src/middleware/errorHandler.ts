@@ -25,6 +25,11 @@ function normalizeError(error: unknown): AppError {
     return new AppError('VALIDATION_ERROR', 400, '请求体不是合法的 JSON');
   }
 
+  // body-parser 在超过 size limit 时抛出 status=413 的错误。
+  if (typeof error === 'object' && error !== null && (error as { status?: number }).status === 413) {
+    return new AppError('PAYLOAD_TOO_LARGE', 413, '请求体过大，请缩短文本或改为上传文件');
+  }
+
   const message =
     env.nodeEnv === 'production'
       ? '服务器内部错误'

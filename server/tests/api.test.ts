@@ -143,6 +143,15 @@ describe('POST /api/minutes/generate', () => {
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
 
+  it('请求体过大时返回 413', async () => {
+    const response = await request(app)
+      .post('/api/minutes/generate')
+      .send({ text: 'x'.repeat(1_200_000) });
+
+    expect(response.status).toBe(413);
+    expect(response.body.error.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
   it('AI 未配置时返回 503', async () => {
     mockedGenerate.mockRejectedValue(new AppError('AI_NOT_CONFIGURED', 503, '未配置模型'));
 

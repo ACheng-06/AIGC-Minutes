@@ -50,6 +50,13 @@ describe('extractText', () => {
     await expect(promise).rejects.toMatchObject({ code: 'UNSUPPORTED_FILE_TYPE', status: 415 });
   });
 
+  it('ZIP 头正确但 DOCX 内容损坏时抛出 FILE_PARSE_ERROR', async () => {
+    const brokenZip = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from('broken-docx')]);
+    const promise = extractTextFromFile(makeFile('broken.docx', brokenZip));
+
+    await expect(promise).rejects.toMatchObject({ code: 'FILE_PARSE_ERROR', status: 422 });
+  });
+
   it('拒绝不支持的扩展名', async () => {
     const promise = extractTextFromFile(makeFile('meeting.pdf', Buffer.from('pdf')));
 
