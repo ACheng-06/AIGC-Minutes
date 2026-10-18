@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
+import { ApiError } from '../api/http';
+import { exportMinutes } from '../api/minutes';
 import { useMinutesStore } from '../composables/useMinutesStore';
+import type { Minutes } from '../types/minutes';
 import { copyText } from '../utils/clipboard';
+import { buildExportFileName, downloadBlob } from '../utils/download';
 import { formatMinutesText } from '../utils/formatMinutes';
 
 const { state, markDirty } = useMinutesStore();
+const exporting = ref(false);
 
 // flush: 'sync' 保证编辑后立即标记“未保存”，不依赖下一次渲染。
 watch(
@@ -51,6 +56,47 @@ async function handleCopy(): Promise<void> {
     ElMessage.success('已复制到剪贴板');
   } catch {
     ElMessage.error('复制失败，请手动选择文本复制');
+  }
+}
+
+/** 导出前先在前端做一次轻量校验，避免把明显不合法的内容发给后端。 */
+async function handleExport(): Promise<void> {
+  const minutes = state.minutes;
+  if (!minutes) {
+    return;
+  }
+
+  if (!minutes.summary.trim()) {
+    ElMessage.warning('请先填写会议摘要');
+    return;
+  }
+
+  const emptyTaskIndex = minutes.todos.findIndex((todo) => !todo.task.trim());
+  if (emptyTaskIndex >= 0) {
+    ElMessage.warning(`第 ${emptyTaskIndex + 1} 条待办缺少任务描述`);
+    return;
+  }
+
+  const payload: Minutes = {
+    title: minutes.title.trim() || '会议纪要',
+    summary: minutes.summary.trim(),
+    decisions: minutes.decisions.map((decision) => decision.trim()).filter(Boolean),
+    todos: minutes.todos.map((todo) => ({
+      task: todo.task.trim(),
+      owner: todo.owner.trim(),
+      dueDate: todo.dueDate || '',
+    })),
+  };
+
+  exporting.value = true;
+  try {
+    const blob = await exportMinutes(payload);
+    downloadBlob(blob, buildExportFileName(payload.title));
+    ElMessage.success('Word 文档已开始下载');
+  } catch (error) {
+    ElMessage.error(error instanceof ApiError ? error.message : '导出失败，请稍后重试');
+  } finally {
+    exporting.value = false;
   }
 }
 </script>
@@ -129,6 +175,7 @@ async function handleCopy(): Promise<void> {
 
     <div class="editor-actions">
       <el-button type="primary" plain @click="handleCopy">复制纪要</el-button>
+      <el-button type="primary" :loading="exporting" @click="handleExport">导出 Word</el-button>
       <span class="actions-tip">负责人和日期留空时，展示与复制时都会标记为“未明确”</span>
     </div>
   </el-card>
