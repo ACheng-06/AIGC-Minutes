@@ -43,9 +43,12 @@ export function errorHandler(error: unknown, _req: Request, res: Response, _next
 
   const appError = normalizeError(error);
   if (appError.status >= 500) {
+    // 业务可预期的 5xx（模型超时、输出不合法等）只记录错误码；
+    // 未预期的异常才附带堆栈，方便定位问题，也避免日志被无关堆栈淹没。
+    const isExpectedBusinessError = error instanceof AppError;
     logger.error(appError.message, {
       code: appError.code,
-      stack: error instanceof Error ? error.stack : undefined,
+      ...(isExpectedBusinessError ? {} : { stack: error instanceof Error ? error.stack : undefined }),
     });
   }
 

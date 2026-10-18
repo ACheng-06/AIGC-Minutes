@@ -3,6 +3,7 @@ import cors from 'cors';
 import { env } from './env';
 import { AppError } from './lib/errors';
 import { errorHandler } from './middleware/errorHandler';
+import { minutesRouter } from './routes/minutes.route';
 
 /**
  * 创建 Express 应用但不监听端口，便于测试里直接交给 supertest 使用。
@@ -24,6 +25,8 @@ export function createApp(): express.Express {
       },
     });
   });
+
+  app.use('/api/minutes', minutesRouter);
 
   // 未匹配到任何路由时返回 404，而不是 Express 默认的 HTML 页面。
   app.use((req, _res, next) => {
