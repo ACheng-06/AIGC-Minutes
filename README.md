@@ -65,6 +65,8 @@ AIGC Minutes/
 │       ├── router/           # 三页路由与标题
 │       ├── utils/            # 复制、文本格式化、下载、文件名
 │       ├── types/            # 与后端手工同步的类型
+│       ├── auto-imports.d.ts # 自动生成：Element Plus 函数式 API 声明
+│       ├── components.d.ts   # 自动生成：模板组件声明
 │       └── constants.ts      # 输入限制与存储 key
 ├── AGENTS.md                 # 开发约定与 Git 规范
 └── README.md
@@ -271,11 +273,12 @@ npm run preview
 
 自动化测试不调用真实模型：API 测试中 mock 了 AI 服务，AI 测试中 mock 了 `fetch`。
 
-**最近一次实际验证（2026-10-18）：**
+**最近一次实际验证（2026-10-22）：**
 
 - 后端 `typecheck`、`build` 通过；`npm test` 共 **5 个文件 / 47 个用例**通过。
 - 前端 `typecheck`、`build` 通过；`npm test` 共 **3 个文件 / 13 个用例**通过。
-- 单进程部署曾实测：`/`、`/history` 返回页面，`/api/health` 正常，未知 `/api` 路径返回 JSON 404；三页新界面的浏览器截图/点击验证尚未自动化。
+- Element Plus 改为按需引入后，构建主 JS 约 119KB（gzip 约 47KB），最大页面 chunk 约 346KB（gzip 约 115KB），不再触发 500KB 体积提示。
+- 单进程部署（`WEB_DIST`）实测：`/`、`/workspace`、`/history` 三页渲染正常，Element Plus 组件样式生效，控制台无 error/warning；`/api/health` 正常，未知 `/api` 路径返回 JSON 404。
 
 覆盖范围：Zod 归一化、TXT/DOCX 提取（含 GBK、损坏文件）、AI JSON 解析与一次修复、超时/上游异常、输入校验、文件大小、导出 docx、localStorage 上限与配额异常。
 
@@ -316,7 +319,7 @@ npm start
 
 ## 已知限制
 
-- Element Plus 采用全量引入，主 JS 约 1.04MB（gzip 约 342KB），构建会提示超过 500KB；MVP 优先可读性，后续可改按需引入。
+- Element Plus 已改为按需引入（`unplugin-auto-import` + `unplugin-vue-components`），构建主 JS 约 119KB（gzip 约 47KB），最大页面 chunk 约 346KB（gzip 约 115KB），不再触发 500KB 体积提示。
 - 不做流式输出，生成期间需要等待 10–60 秒。
 - 不做长文档分块，输入上限 30000 字符；超出会明确报错，不会静默截断。
 - localStorage 最多 10 条，共用电脑时请及时清空。

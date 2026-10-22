@@ -19,7 +19,7 @@ AIGC Minutes 是一个 AI 会议纪要工具：输入会议原文（粘贴文本
 
 ## 2. 技术栈与目录
 
-- 前端：Vue 3 + TypeScript + Vite + Vue Router + Element Plus + Axios
+- 前端：Vue 3 + TypeScript + Vite + Vue Router + Element Plus（按需引入）+ Axios
 - 后端：Node.js + Express 4 + TypeScript + Zod + Mammoth + docx
 - AI：任意 OpenAI 兼容接口，`server/src/services/ai.ts` 是唯一模型调用出口
 - 包管理器：npm（提交 `package-lock.json`）
@@ -123,7 +123,8 @@ npm run dev / typecheck / test / build / preview
 - P0–P12 与三页 UI/UX 升级（D1–D4）已完成，MVP 可在本地运行并支持单进程静态部署。
 - 页面路由：`/` 首页、`/workspace` 工作台、`/history` 本地记录；设计规范在 `docs/design/ui-ux-spec.md`。
 - 公开仓库：https://github.com/ACheng-06/aigc-minutes（MIT 许可证）。
-- 后端 47 个自动化测试、前端 13 个自动化测试通过；双端 typecheck 与 build 通过（最后核对：2026-10-18）。
-- 单进程部署（`WEB_DIST`）曾实测页面、SPA 路由、健康检查、API 404；三页新界面的浏览器截图/点击验证尚未自动化。
+- 后端 47 个自动化测试、前端 13 个自动化测试通过；双端 typecheck 与 build 通过（最后核对：2026-10-22）。
+- Element Plus 已改为按需引入（`unplugin-auto-import` + `unplugin-vue-components`），`web/src/auto-imports.d.ts` 与 `web/src/components.d.ts` 由构建生成并需提交。
+- 单进程部署（`WEB_DIST`）实测页面、SPA 路由、健康检查、API 404；三页界面已用浏览器实测渲染与控制台（无 error/warning），但尚未纳入自动化测试。
 - 尚未执行真实模型调用：需要项目所有者配置 `server/.env` 后按 README 的「真实模型冒烟」清单手动验证。
 - 后续改动请继续遵守本文件的范围、类型同步、测试与 Git 规范。

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue';
-import { ElMessage } from 'element-plus';
 import InputPanel from '../components/InputPanel.vue';
 import MinutesEditor from '../components/MinutesEditor.vue';
 import SourcePanel from '../components/SourcePanel.vue';

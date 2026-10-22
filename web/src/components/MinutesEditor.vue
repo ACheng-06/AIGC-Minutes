@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
 import { ApiError } from '../api/http';
 import { exportMinutes } from '../api/minutes';
 import { saveRecord } from '../composables/useLocalMinutes';
 import { useMinutesStore } from '../composables/useMinutesStore';
+import {
+  MAX_DECISION_LENGTH,
+  MAX_DECISIONS,
+  MAX_OWNER_LENGTH,
+  MAX_SUMMARY_LENGTH,
+  MAX_TITLE_LENGTH,
+  MAX_TODO_TASK_LENGTH,
+  MAX_TODOS,
+} from '../constants';
 import type { Minutes } from '../types/minutes';
 import { copyText } from '../utils/clipboard';
 import { buildExportFileName, downloadBlob } from '../utils/download';
@@ -39,6 +47,10 @@ function addDecision(): void {
   if (!state.minutes) {
     return;
   }
+  if (state.minutes.decisions.length >= MAX_DECISIONS) {
+    ElMessage.warning(`关键决策最多 ${MAX_DECISIONS} 条`);
+    return;
+  }
   state.minutes.decisions.push('');
   markDirty();
 }
@@ -49,7 +61,14 @@ function removeDecision(index: number): void {
 }
 
 function addTodo(): void {
-  state.minutes?.todos.push({ task: '', owner: '', dueDate: '' });
+  if (!state.minutes) {
+    return;
+  }
+  if (state.minutes.todos.length >= MAX_TODOS) {
+    ElMessage.warning(`待办事项最多 ${MAX_TODOS} 条`);
+    return;
+  }
+  state.minutes.todos.push({ task: '', owner: '', dueDate: '' });
   markDirty();
 }
 
@@ -92,6 +111,32 @@ async function handleCopy(): Promise<void> {
   }
 }
 
+const FIELD_LABELS: Array<[string, string]> = [
+  ['minutes.title', '标题'],
+  ['minutes.summary', '会议摘要'],
+  ['minutes.decisions', '关键决策'],
+  ['minutes.todos', '待办事项'],
+];
+
+/** 把后端 details 里的字段路径翻译成界面用语，避免只给一句“导出参数不合法”。 */
+function describeExportError(error: unknown): string {
+  if (!(error instanceof ApiError)) {
+    return '导出失败，请稍后重试';
+  }
+
+  const details = error.details
+    .slice(0, 3)
+    .map((item) => {
+      const label = FIELD_LABELS.find(
+        ([path]) => item.path === path || item.path.startsWith(`${path}.`),
+      )?.[1];
+      return label ? `${label}：${item.message}` : item.message;
+    })
+    .join('；');
+
+  return details ? `${error.message}（${details}）` : error.message;
+}
+
 /** 导出前先在前端做一次轻量校验，避免把明显不合法的内容发给后端。 */
 async function handleExport(): Promise<void> {
   const minutes = state.minutes;
@@ -101,6 +146,17 @@ async function handleExport(): Promise<void> {
 
   if (!minutes.summary.trim()) {
     ElMessage.warning('请先填写会议摘要');
+    return;
+  }
+
+  // 历史记录可能由旧版本写入，条数仍可能超出上限，导出前再拦一次。
+  if (minutes.decisions.length > MAX_DECISIONS) {
+    ElMessage.warning(`关键决策最多 ${MAX_DECISIONS} 条，请先删减`);
+    return;
+  }
+
+  if (minutes.todos.length > MAX_TODOS) {
+    ElMessage.warning(`待办事项最多 ${MAX_TODOS} 条，请先删减`);
     return;
   }
 
@@ -128,7 +184,7 @@ async function handleExport(): Promise<void> {
     liveMessage.value = 'Word 文档已开始下载';
     ElMessage.success('Word 文档已开始下载');
   } catch (error) {
-    ElMessage.error(error instanceof ApiError ? error.message : '导出失败，请稍后重试');
+    ElMessage.error(describeExportError(error));
   } finally {
     exporting.value = false;
   }
@@ -166,7 +222,7 @@ function handleSaveLocal(): void {
         id="minutes-title"
         v-model="state.minutes.title"
         class="title-input"
-        maxlength="100"
+        :maxlength="MAX_TITLE_LENGTH"
         placeholder="纪要标题"
       />
       <span class="status-tag" :class="{ 'is-dirty': state.dirty }">{{ statusText }}</span>
@@ -188,7 +244,7 @@ function handleSaveLocal(): void {
         v-model="state.minutes.summary"
         type="textarea"
         :autosize="{ minRows: 4, maxRows: 12 }"
-        maxlength="20000"
+        :maxlength="MAX_SUMMARY_LENGTH"
         show-word-limit
         placeholder="会议摘要"
       />
@@ -208,6 +264,7 @@ function handleSaveLocal(): void {
             class="line-input"
             type="text"
             :aria-label="`第 ${index + 1} 条关键决策`"
+            :maxlength="MAX_DECISION_LENGTH"
             placeholder="描述一条关键决策"
           />
           <el-button link type="danger" :aria-label="`删除第 ${index + 1} 条决策`" @click="removeDecision(index)">
@@ -228,12 +285,22 @@ function handleSaveLocal(): void {
         <el-table class="todo-table" :data="state.minutes.todos" size="small">
           <el-table-column label="任务" min-width="260">
             <template #default="{ row, $index }">
-              <el-input v-model="row.task" :aria-label="`第 ${$index + 1} 条待办的任务`" placeholder="任务描述" />
+              <el-input
+                v-model="row.task"
+                :aria-label="`第 ${$index + 1} 条待办的任务`"
+                :maxlength="MAX_TODO_TASK_LENGTH"
+                placeholder="任务描述"
+              />
             </template>
           </el-table-column>
           <el-table-column label="负责人" min-width="180">
             <template #default="{ row, $index }">
-              <el-input v-model="row.owner" :aria-label="`第 ${$index + 1} 条待办的负责人`" placeholder="未明确" />
+              <el-input
+                v-model="row.owner"
+                :aria-label="`第 ${$index + 1} 条待办的负责人`"
+                :maxlength="MAX_OWNER_LENGTH"
+                placeholder="未明确"
+              />
             </template>
           </el-table-column>
           <el-table-column label="截止时间" min-width="170">
