@@ -15,6 +15,7 @@
           <p class="preview-quote">
             “本周确认首页改版范围，下周三前完成验收；数据看板先不动，等下一轮再排。”
           </p>
+          <p class="preview-source-note">原文只用于本次整理，不会写入本地记录。</p>
         </section>
 
         <section class="preview-pane preview-result" aria-label="整理后的纪要示例">
@@ -66,6 +67,9 @@
 }
 
 .preview-window {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -81,7 +85,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: 10px var(--space-4);
+  padding: 12px var(--space-5);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
 }
@@ -91,7 +95,7 @@
   align-items: center;
   gap: var(--space-2);
   color: var(--color-fg-muted);
-  font-size: var(--font-size-caption);
+  font-size: 0.75rem;
   font-weight: 500;
 }
 
@@ -136,22 +140,34 @@
 
 .preview-body {
   display: grid;
+  flex: 1;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
 }
 
 .preview-pane {
   min-width: 0;
-  padding: var(--space-4);
+  padding: var(--space-5);
 }
 
 .preview-source {
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid var(--color-border);
   background: var(--color-surface-subtle);
 }
 
+.preview-source-note {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
 .preview-label {
   color: var(--color-fg-muted);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -159,8 +175,8 @@
 .preview-quote {
   margin-top: var(--space-2);
   color: var(--color-fg-strong);
-  font-size: var(--font-size-small);
-  line-height: 1.65;
+  font-size: 0.9375rem;
+  line-height: 1.7;
 }
 
 .preview-result-head {
@@ -172,7 +188,7 @@
 
 .preview-doc-title {
   color: var(--color-fg);
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -183,7 +199,7 @@
   align-items: center;
   gap: 4px;
   color: var(--color-primary);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -197,8 +213,8 @@
 .preview-summary {
   margin-top: 6px;
   color: var(--color-fg-muted);
-  font-size: var(--font-size-caption);
-  line-height: 1.6;
+  font-size: 0.8125rem;
+  line-height: 1.65;
 }
 
 .preview-block {
@@ -210,8 +226,8 @@
 .preview-block > p:not(.preview-label) {
   margin-top: var(--space-1);
   color: var(--color-fg-strong);
-  font-size: var(--font-size-caption);
-  line-height: 1.55;
+  font-size: 0.8125rem;
+  line-height: 1.6;
 }
 
 .preview-todos {
@@ -232,12 +248,12 @@
 
 .preview-todo-task {
   color: var(--color-fg-strong);
-  font-size: var(--font-size-caption);
+  font-size: 0.8125rem;
 }
 
 .preview-meta {
   color: var(--color-fg-muted);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
@@ -246,17 +262,17 @@
   flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--space-1) var(--space-3);
-  padding: 8px var(--space-4);
+  padding: 10px var(--space-5);
   border-top: 1px solid var(--color-border);
   background: var(--color-surface-subtle);
   color: var(--color-fg-muted);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .minutes-preview figcaption {
   margin-top: var(--space-2);
   color: var(--color-fg-muted);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 @media (hover: hover) {
@@ -267,6 +283,10 @@
 }
 
 @media (max-width: 640px) {
+  .preview-window {
+    min-height: 0;
+  }
+
   .preview-body {
     grid-template-columns: 1fr;
   }
@@ -277,11 +297,15 @@
   }
 
   .preview-pane {
-    padding: var(--space-3);
+    padding: var(--space-4);
   }
 
   .preview-toolbar {
-    padding: 8px var(--space-3);
+    padding: 10px var(--space-4);
+  }
+
+  .preview-footer {
+    padding-inline: var(--space-4);
   }
 
   .preview-todos li {

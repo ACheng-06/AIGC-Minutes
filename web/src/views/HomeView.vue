@@ -7,6 +7,7 @@ import MinutesPreview from '../components/MinutesPreview.vue';
     <section class="hero" aria-labelledby="hero-title">
       <div class="home-inner hero-inner">
         <div class="hero-copy">
+          <p class="hero-eyebrow"><span class="hero-eyebrow-dot" aria-hidden="true"></span>AI 会议纪要 · 从原文到行动</p>
           <h1 id="hero-title" class="hero-title">
             把会议原文，<br />
             整理成能执行的纪要。
@@ -27,9 +28,20 @@ import MinutesPreview from '../components/MinutesPreview.vue';
           <router-link class="demo-link" to="/workspace?demo=1">体验一下 →</router-link>
         </div>
       </div>
+
+      <div class="hero-foot">
+        <div class="home-inner hero-foot-inner">
+          <ul class="hero-facts">
+            <li>支持 TXT / DOCX</li>
+            <li>摘要 · 决策 · 待办</li>
+            <li>可导出 Word</li>
+          </ul>
+          <a class="scroll-cue" href="#steps">了解工作方式 <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
     </section>
 
-    <section class="steps" aria-labelledby="steps-title">
+    <section id="steps" class="steps" aria-labelledby="steps-title">
       <div class="home-inner">
         <div class="section-heading">
           <h2 id="steps-title">从原文到纪要，只要三步</h2>
@@ -104,20 +116,45 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 }
 
 .hero {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 69px);
+  min-height: calc(100svh - 69px);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface);
 }
 
 .hero-inner {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: clamp(32px, 5vw, 64px);
+  flex: 1;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(28px, 3.4vw, 48px);
+  align-content: center;
   align-items: center;
-  padding-block: clamp(48px, 7vw, 96px) clamp(48px, 6vw, 80px);
+  width: 100%;
+  padding-block: clamp(40px, 5vw, 64px);
 }
 
 .hero-copy {
   min-width: 0;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.hero-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
 }
 
 .hero-title {
@@ -154,6 +191,65 @@ import MinutesPreview from '../components/MinutesPreview.vue';
   min-width: 0;
 }
 
+.hero-foot {
+  border-top: 1px solid var(--color-border);
+}
+
+.hero-foot-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  padding-block: var(--space-2);
+}
+
+.hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  padding: 0;
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+  list-style: none;
+}
+
+.hero-facts li {
+  position: relative;
+}
+
+.hero-facts li + li {
+  padding-left: var(--space-4);
+}
+
+.hero-facts li + li::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 1px;
+  height: 10px;
+  background: var(--color-border);
+  content: '';
+  transform: translateY(-50%);
+}
+
+.scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.scroll-cue span {
+  color: var(--color-primary);
+}
+
 .demo-link {
   display: inline-flex;
   align-items: center;
@@ -170,6 +266,10 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 .outputs,
 .boundary {
   padding-block: clamp(48px, 6vw, 72px);
+}
+
+#steps {
+  scroll-margin-top: var(--space-4);
 }
 
 .section-heading {
@@ -287,6 +387,10 @@ import MinutesPreview from '../components/MinutesPreview.vue';
     color: var(--color-primary-hover);
     text-decoration: underline;
   }
+
+  .scroll-cue:hover {
+    color: var(--color-fg);
+  }
 }
 
 @media (max-width: 900px) {
@@ -322,6 +426,11 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 @media (max-width: 640px) {
   .hero-inner {
     padding-block: var(--space-7) var(--space-6);
+  }
+
+  .hero-foot-inner {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .hero-title {
