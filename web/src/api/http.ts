@@ -47,6 +47,17 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * 用户主动取消请求。
+ * 不复用 ApiError，避免把“取消”混进后端错误码契约；页面可以据此静默处理。
+ */
+export class CanceledError extends Error {
+  constructor() {
+    super('请求已取消');
+    this.name = 'CanceledError';
+  }
+}
+
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export const http = axios.create({
@@ -57,6 +68,11 @@ export const http = axios.create({
 http.interceptors.response.use(
   (response) => response,
   async (error: unknown) => {
+    // 主动取消不是失败：保留独立类型，避免客户端把取消提示成“无法连接后端”。
+    if (axios.isCancel(error)) {
+      return Promise.reject(new CanceledError());
+    }
+
     // 导出接口使用 responseType=blob，后端返回的错误 JSON 也会被包装成 Blob。
     if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
       try {

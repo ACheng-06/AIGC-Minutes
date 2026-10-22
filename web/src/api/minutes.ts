@@ -5,16 +5,28 @@ interface DataResponse<T> {
   data: T;
 }
 
-export async function generateByText(text: string): Promise<GenerateResult> {
-  const response = await http.post<DataResponse<GenerateResult>>('/minutes/generate', { text });
+export async function generateByText(
+  text: string,
+  signal?: AbortSignal,
+): Promise<GenerateResult> {
+  const response = await http.post<DataResponse<GenerateResult>>(
+    '/minutes/generate',
+    { text },
+    { signal },
+  );
   return response.data.data;
 }
 
-export async function generateByFile(file: File): Promise<GenerateResult> {
+export async function generateByFile(
+  file: File,
+  signal?: AbortSignal,
+): Promise<GenerateResult> {
   const formData = new FormData();
   formData.append('file', file);
   // 不手动设置 Content-Type，让浏览器自动带上 multipart boundary。
-  const response = await http.post<DataResponse<GenerateResult>>('/minutes/generate', formData);
+  const response = await http.post<DataResponse<GenerateResult>>('/minutes/generate', formData, {
+    signal,
+  });
   return response.data.data;
 }
 

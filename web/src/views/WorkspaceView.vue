@@ -4,7 +4,7 @@ import InputPanel from '../components/InputPanel.vue';
 import MinutesEditor from '../components/MinutesEditor.vue';
 import SourcePanel from '../components/SourcePanel.vue';
 import { fetchHealth, generateByFile, generateByText } from '../api/minutes';
-import { ApiError } from '../api/http';
+import { ApiError, CanceledError } from '../api/http';
 import { saveRecord } from '../composables/useLocalMinutes';
 import { useMinutesStore } from '../composables/useMinutesStore';
 import type { GenerateInput } from '../types/minutes';
@@ -19,6 +19,9 @@ const resultHeading = ref<HTMLElement | null>(null);
 const showSource = computed(() => inputMode.value === 'source' && state.source !== null);
 const inputInitialText = computed(() => (state.source?.kind === 'text' ? state.source.text : ''));
 
+// 同一时间只保留一个生成请求；新请求会中止旧请求，避免两次结果互相覆盖。
+let activeController: AbortController | null = null;
+
 onMounted(async () => {
   try {
     const health = await fetchHealth();
@@ -29,12 +32,18 @@ onMounted(async () => {
 });
 
 async function handleGenerate(input: GenerateInput): Promise<void> {
+  activeController?.abort();
+  const controller = new AbortController();
+  activeController = controller;
+
   setLoading(true);
   setError('');
 
   try {
     const result =
-      input.type === 'text' ? await generateByText(input.text) : await generateByFile(input.file);
+      input.type === 'text'
+        ? await generateByText(input.text, controller.signal)
+        : await generateByFile(input.file, controller.signal);
 
     setResult(result);
     setSource({
@@ -57,10 +66,23 @@ async function handleGenerate(input: GenerateInput): Promise<void> {
     await nextTick();
     resultHeading.value?.focus();
   } catch (error) {
+    // 主动取消不算失败，也不覆盖上一次的结果与错误提示。
+    if (error instanceof CanceledError) {
+      return;
+    }
     setError(error instanceof ApiError ? error.message : '生成失败，请稍后重试');
   } finally {
-    setLoading(false);
+    // 旧请求结束时不复位 loading，避免打断正在等待的新请求。
+    if (activeController === controller) {
+      activeController = null;
+      setLoading(false);
+    }
   }
+}
+
+function handleCancel(): void {
+  // 只发取消信号；loading 由请求的 finally 统一复位。
+  activeController?.abort();
 }
 
 function handleReinput(): void {
@@ -104,9 +126,12 @@ function handleReinput(): void {
             </p>
           </div>
 
-          <div v-if="state.loading" class="result-loading" role="status" aria-live="polite">
+          <div v-if="state.loading" class="result-loading" aria-busy="true">
             <el-skeleton :rows="6" animated />
-            <p class="loading-text">正在整理会议内容，通常需要 10–60 秒……</p>
+            <p class="loading-text" role="status" aria-live="polite">
+              正在整理会议内容，通常需要 10–60 秒……
+            </p>
+            <el-button class="cancel-button" @click="handleCancel">取消生成</el-button>
           </div>
 
           <MinutesEditor v-else-if="state.minutes" />
@@ -192,6 +217,11 @@ function handleReinput(): void {
   margin-top: var(--space-4);
   color: var(--color-fg-muted);
   font-size: var(--font-size-small);
+}
+
+.cancel-button {
+  min-height: 44px;
+  margin-top: var(--space-4);
 }
 
 .empty-result {
