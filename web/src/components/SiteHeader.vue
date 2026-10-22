@@ -18,7 +18,7 @@
 <style scoped>
 .site-header {
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 
 .site-header-inner {
@@ -29,13 +29,13 @@
   width: 100%;
   max-width: var(--content-workspace);
   margin: 0 auto;
-  padding: var(--space-4) var(--content-pad);
+  padding: var(--space-3) var(--content-pad);
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-height: 44px;
   color: var(--color-fg);
   text-decoration: none;
@@ -45,36 +45,39 @@
   color: var(--color-fg);
 }
 
+/* 用 CSS 画一个简洁的文档标记，避免引入图片资源。 */
 .brand-mark {
   position: relative;
   display: block;
-  width: 17px;
-  height: 21px;
-  border: 1.5px solid var(--color-primary);
-  border-radius: 1px;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 5px;
+  background: var(--color-primary);
 }
 
 .brand-mark::before,
 .brand-mark::after {
   position: absolute;
-  right: 3px;
-  left: 3px;
-  height: 1px;
-  background: var(--color-primary);
+  left: 5px;
+  width: 10px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: var(--color-on-primary);
   content: '';
 }
 
 .brand-mark::before {
-  top: 6px;
+  top: 7px;
 }
 
 .brand-mark::after {
-  top: 10px;
+  top: 12px;
 }
 
 .brand-name {
-  font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-family: var(--font-heading);
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -82,28 +85,40 @@
 .site-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-1);
 }
 
 .site-nav a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  border-bottom: 2px solid transparent;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-xs);
   color: var(--color-fg-muted);
   font-size: var(--font-size-small);
   font-weight: 500;
   text-decoration: none;
-}
-
-.site-nav a:hover {
-  color: var(--color-fg);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
 .site-nav a.is-active {
-  border-bottom-color: var(--color-primary);
-  color: var(--color-fg);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-weight: 600;
+}
+
+@media (hover: hover) {
+  .site-nav a:hover {
+    background: var(--color-surface-subtle);
+    color: var(--color-fg);
+  }
+
+  .site-nav a.is-active:hover {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
 }
 
 @media (max-width: 640px) {
@@ -115,7 +130,13 @@
   .site-nav {
     width: 100%;
     justify-content: space-between;
-    gap: var(--space-4);
+    gap: var(--space-1);
+  }
+
+  .site-nav a {
+    flex: 1;
+    justify-content: center;
+    padding: 0 var(--space-2);
   }
 }
 </style>

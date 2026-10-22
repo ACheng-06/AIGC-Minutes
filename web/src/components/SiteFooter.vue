@@ -5,7 +5,7 @@
       <p class="site-footer-links">
         <span translate="no">AIGC Minutes</span>
         <span aria-hidden="true">·</span>
-        <a href="https://github.com/ACheng-06/aigc-minutes" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/ACheng-06/AIGC-Minutes" target="_blank" rel="noopener noreferrer">
           GitHub 源码
         </a>
       </p>
@@ -16,7 +16,7 @@
 <style scoped>
 .site-footer {
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 
 .site-footer-inner {
@@ -35,16 +35,22 @@
 
 .site-footer-links {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
 }
 
 .site-footer a {
   color: var(--color-fg-muted);
+  text-decoration: none;
   text-underline-offset: 0.2em;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
-.site-footer a:hover {
-  color: var(--color-fg);
+@media (hover: hover) {
+  .site-footer a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
 }
 </style>
