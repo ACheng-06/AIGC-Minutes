@@ -15,7 +15,7 @@ body {
   min-width: 320px;
   background: var(--color-bg);
   color: var(--color-fg);
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
   font-size: var(--font-size-body);
   line-height: var(--line-height-body);
 }
@@ -30,21 +30,21 @@ h3,
 h4 {
   margin: 0;
   color: var(--color-fg);
+  font-family: var(--font-heading);
   line-height: var(--line-height-heading);
   text-wrap: balance;
 }
 
 h1 {
-  font-family: var(--font-display);
   font-size: var(--font-size-h1);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 h2 {
-  font-family: var(--font-display);
   font-size: var(--font-size-h2);
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 h3 {
@@ -59,6 +59,7 @@ p {
 a {
   color: var(--color-primary);
   text-underline-offset: 0.18em;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 a:hover {
@@ -182,29 +183,24 @@ main:focus-visible {
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .button-primary {
   border-color: var(--color-primary);
   background: var(--color-primary);
-  color: var(--white);
-}
-
-.button-primary:hover {
-  border-color: var(--color-primary-hover);
-  background: var(--color-primary-hover);
-  color: var(--white);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-xs);
 }
 
 .button-secondary {
   border-color: var(--color-border);
-  background: transparent;
-  color: var(--color-fg);
-}
-
-.button-secondary:hover {
-  border-color: var(--color-fg-muted);
-  background: var(--color-surface-subtle);
+  background: var(--color-surface);
   color: var(--color-fg);
 }
 
@@ -217,15 +213,41 @@ main:focus-visible {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
-.text-link:hover {
-  color: var(--color-primary-hover);
+@media (hover: hover) {
+  .button-primary:hover {
+    border-color: var(--color-primary-hover);
+    background: var(--color-primary-hover);
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+
+  .button-secondary:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-subtle);
+    color: var(--color-fg);
+  }
+
+  .text-link:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+.button-primary:active {
+  box-shadow: var(--shadow-xs);
+  transform: translateY(0);
+}
+
+.button-secondary:active {
+  background: var(--color-surface-subtle);
 }
 
 @media (max-width: 640px) {
   :root {
-    --font-size-h1: 1.85rem;
+    --font-size-h1: 1.75rem;
   }
 }
 

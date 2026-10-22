@@ -1,67 +1,78 @@
 /*
  * AIGC Minutes 设计 token
  * 三层：primitive -> semantic -> Element Plus 覆盖。
+ * 现代 SaaS 方向：冷净浅灰底、白色内容面、深墨文字、单一蓝色强调。
  * 组件不要直接写十六进制颜色；新增颜色先加到这一层。
  */
 :root {
   color-scheme: light;
 
-  /* Primitive: 纸面 / 墨色 / 线条 */
-  --paper-50: #f8f6f0;
-  --paper-100: #f1ede3;
-  --paper-200: #e8e2d4;
-  --ink-900: #1c1b18;
-  --ink-700: #3a3832;
-  --ink-600: #5c5a52;
-  --line: #d8d2c4;
-
-  /* Primitive: 行动 / 状态 */
-  --cobalt-600: #1f4fd1;
-  --cobalt-700: #163ba0;
-  --cobalt-100: #e6ebfa;
-  --danger-600: #a3312a;
-  --danger-700: #7f241f;
-  --danger-100: #f7e7e4;
-  --success-700: #2f6b4f;
-  --success-100: #e4f0e8;
-  --warning-700: #7a4e00;
-  --warning-100: #f6ebd1;
+  /* Primitive: 中性色 */
+  --slate-50: #f7f8fa;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-900: #0f172a;
   --white: #ffffff;
 
-  /* Semantic */
-  --color-bg: var(--paper-50);
-  --color-surface: var(--white);
-  --color-surface-subtle: var(--paper-100);
-  --color-fg: var(--ink-900);
-  --color-fg-strong: var(--ink-700);
-  --color-fg-muted: var(--ink-600);
-  --color-border: var(--line);
-  --color-primary: var(--cobalt-600);
-  --color-primary-hover: var(--cobalt-700);
-  --color-primary-soft: var(--cobalt-100);
-  --color-danger: var(--danger-600);
-  --color-danger-hover: var(--danger-700);
-  --color-danger-soft: var(--danger-100);
-  --color-success: var(--success-700);
-  --color-success-soft: var(--success-100);
-  --color-warning: var(--warning-700);
-  --color-warning-soft: var(--warning-100);
-  --color-focus: var(--cobalt-600);
+  /* Primitive: 品牌蓝 */
+  --blue-50: #eff6ff;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
 
-  /* 字体：不加载外部字体，避免首屏网络依赖 */
-  --font-display: 'Songti SC', 'STSong', 'Noto Serif CJK SC', Georgia, serif;
-  --font-body: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
-  --font-size-display: clamp(2.5rem, 6vw, 5rem);
-  --font-size-h1: clamp(2rem, 3.5vw, 3rem);
+  /* Primitive: 状态色 */
+  --red-50: #fef2f2;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --green-50: #f0fdf4;
+  --green-700: #15803d;
+  --amber-50: #fffbeb;
+  --amber-700: #b45309;
+
+  /* Semantic */
+  --color-bg: var(--slate-50);
+  --color-surface: var(--white);
+  --color-surface-subtle: var(--slate-100);
+  --color-fg: var(--slate-900);
+  --color-fg-strong: var(--slate-700);
+  --color-fg-muted: var(--slate-600);
+  --color-border: var(--slate-200);
+  --color-border-strong: var(--slate-300);
+  --color-primary: var(--blue-600);
+  --color-primary-hover: var(--blue-700);
+  --color-primary-soft: var(--blue-50);
+  --color-on-primary: var(--white);
+  --color-danger: var(--red-600);
+  --color-danger-hover: var(--red-700);
+  --color-danger-soft: var(--red-50);
+  --color-success: var(--green-700);
+  --color-success-soft: var(--green-50);
+  --color-warning: var(--amber-700);
+  --color-warning-soft: var(--amber-50);
+  --color-focus: var(--blue-600);
+
+  /* 字体：不加载外部字体，使用系统无衬线栈 */
+  --font-sans:
+    'SF Pro Text', 'Segoe UI Variable', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
+    system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  /* 兼容现有组件里的旧变量名，值已经改为无衬线 */
+  --font-display: var(--font-sans);
+
+  --font-size-display: clamp(2.5rem, 4vw, 3.75rem);
+  --font-size-h1: clamp(1.75rem, 2.6vw, 2.5rem);
   --font-size-h2: 1.5rem;
   --font-size-h3: 1.125rem;
   --font-size-body: 1rem;
   --font-size-small: 0.875rem;
   --font-size-caption: 0.8125rem;
-  --line-height-body: 1.65;
+  --line-height-body: 1.6;
   --line-height-heading: 1.15;
 
-  /* 间距 / 圆角 / 线条 */
+  /* 间距 / 圆角 / 线条 / 阴影 */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -71,50 +82,67 @@
   --space-7: 48px;
   --space-8: 64px;
   --space-9: 96px;
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --shadow-sheet: 0 1px 0 rgba(28, 27, 24, 0.06);
-  --content-home: 1200px;
-  --content-workspace: 1440px;
-  --content-history: 1100px;
-  --content-pad: clamp(16px, 4vw, 48px);
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --shadow-xs: 0 1px 2px rgb(15 23 42 / 4%);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 4%), 0 8px 24px rgb(15 23 42 / 5%);
+  /* 兼容现有预览组件；后续组件统一使用 --shadow-sm */
+  --shadow-sheet: var(--shadow-sm);
+
+  /* 页面容器 */
+  --content-home: 1240px;
+  --content-workspace: 1360px;
+  --content-history: 1120px;
+  --content-pad: clamp(16px, 4vw, 40px);
+
+  /* 动效 */
+  --duration-fast: 140ms;
+  --duration-base: 180ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   /* Element Plus 语义映射：只改变量，不靠 !important 覆盖组件 */
   --el-color-primary: var(--color-primary);
   --el-color-primary-dark-2: var(--color-primary-hover);
-  --el-color-primary-light-3: var(--color-primary-hover);
-  --el-color-primary-light-5: #5b7bdb;
-  --el-color-primary-light-7: #a9bbee;
-  --el-color-primary-light-8: #c9d5f5;
+  --el-color-primary-light-3: var(--blue-500);
+  --el-color-primary-light-5: #60a5fa;
+  --el-color-primary-light-7: #93c5fd;
+  --el-color-primary-light-8: #bfdbfe;
   --el-color-primary-light-9: var(--color-primary-soft);
   --el-color-danger: var(--color-danger);
   --el-color-danger-dark-2: var(--color-danger-hover);
-  --el-color-danger-light-3: var(--color-danger-hover);
-  --el-color-danger-light-5: #c25a52;
+  --el-color-danger-light-3: #ef4444;
+  --el-color-danger-light-5: #f87171;
   --el-color-danger-light-9: var(--color-danger-soft);
   --el-color-success: var(--color-success);
+  --el-color-success-light-3: #22c55e;
+  --el-color-success-light-5: #4ade80;
   --el-color-success-light-9: var(--color-success-soft);
   --el-color-warning: var(--color-warning);
+  --el-color-warning-light-3: #f59e0b;
+  --el-color-warning-light-5: #fbbf24;
   --el-color-warning-light-9: var(--color-warning-soft);
   --el-text-color-primary: var(--color-fg);
   --el-text-color-regular: var(--color-fg-muted);
   --el-text-color-secondary: var(--color-fg-muted);
-  --el-text-color-placeholder: #6f6b61;
-  --el-text-color-disabled: #8a857a;
+  /* 占位符也按普通文字处理：在浅灰底上必须达到 4.5:1。 */
+  --el-text-color-placeholder: var(--slate-600);
+  --el-text-color-disabled: #94a3b8;
   --el-border-color: var(--color-border);
   --el-border-color-light: var(--color-border);
-  --el-border-color-lighter: #e6e0d4;
+  --el-border-color-lighter: var(--slate-100);
   --el-fill-color: var(--color-surface-subtle);
   --el-fill-color-light: var(--color-surface-subtle);
-  --el-fill-color-lighter: var(--paper-50);
+  --el-fill-color-lighter: var(--slate-50);
   --el-fill-color-blank: var(--color-surface);
   --el-bg-color: var(--color-surface);
   --el-bg-color-overlay: var(--color-surface);
   --el-border-radius-base: var(--radius-xs);
   --el-border-radius-small: var(--radius-xs);
   --el-border-radius-round: var(--radius-xs);
-  --el-box-shadow-light: 0 1px 0 rgba(28, 27, 24, 0.06);
-  --el-font-family: var(--font-body);
+  --el-box-shadow-light: var(--shadow-xs);
+  --el-font-family: var(--font-sans);
   --el-font-size-base: 16px;
   --el-font-size-small: 14px;
 }
