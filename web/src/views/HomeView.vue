@@ -105,14 +105,15 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 
 .hero {
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .hero-inner {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  gap: clamp(32px, 6vw, 80px);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: clamp(32px, 5vw, 64px);
   align-items: center;
-  padding-block: clamp(56px, 9vw, 112px) clamp(56px, 8vw, 96px);
+  padding-block: clamp(48px, 7vw, 96px) clamp(48px, 6vw, 80px);
 }
 
 .hero-copy {
@@ -120,18 +121,18 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 }
 
 .hero-title {
-  max-width: 13ch;
+  max-width: 12ch;
   font-size: var(--font-size-display);
   font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.025em;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
 }
 
 .hero-lede {
-  max-width: 54ch;
+  max-width: 52ch;
   margin-top: var(--space-5);
   color: var(--color-fg-muted);
-  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  font-size: clamp(1rem, 1.2vw, 1.0625rem);
 }
 
 .hero-actions {
@@ -154,23 +155,21 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 }
 
 .demo-link {
-  display: inline-block;
-  margin-top: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: var(--space-2);
   color: var(--color-primary);
   font-size: var(--font-size-small);
   font-weight: 600;
   text-decoration: none;
-}
-
-.demo-link:hover {
-  color: var(--color-primary-hover);
-  text-decoration: underline;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .steps,
 .outputs,
 .boundary {
-  padding-block: clamp(48px, 7vw, 80px);
+  padding-block: clamp(48px, 6vw, 72px);
 }
 
 .section-heading {
@@ -179,11 +178,11 @@ import MinutesPreview from '../components/MinutesPreview.vue';
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-2) var(--space-5);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 .section-heading h2 {
-  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-size: clamp(1.5rem, 2.2vw, 1.75rem);
 }
 
 .section-heading p {
@@ -203,16 +202,22 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 
 .step-list li {
   padding-top: var(--space-4);
-  border-top: 2px solid var(--color-fg);
+  border-top: 1px solid var(--color-border);
 }
 
 .step-number {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   margin-bottom: var(--space-3);
+  border-radius: var(--radius-xs);
+  background: var(--color-primary-soft);
   color: var(--color-primary);
-  font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: var(--font-size-caption);
   font-weight: 600;
+  line-height: 1;
 }
 
 .step-list h3 {
@@ -226,18 +231,26 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 
 .outputs {
   border-block: 1px solid var(--color-border);
-  background: var(--color-surface-subtle);
+  background: var(--color-surface);
 }
 
 .output-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-6);
 }
 
 .output-list article {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  padding: 0 var(--space-5);
+  border-left: 1px solid var(--color-border);
+}
+
+.output-list article:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.output-list article:last-child {
+  padding-right: 0;
 }
 
 .output-list h3 {
@@ -260,15 +273,26 @@ import MinutesPreview from '../components/MinutesPreview.vue';
   max-width: 62ch;
 }
 
+.boundary h2 {
+  font-size: clamp(1.5rem, 2.2vw, 1.75rem);
+}
+
 .boundary p {
   margin-top: var(--space-3);
   color: var(--color-fg-muted);
 }
 
+@media (hover: hover) {
+  .demo-link:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+}
+
 @media (max-width: 900px) {
   .hero-inner {
     grid-template-columns: 1fr;
-    gap: var(--space-8);
+    gap: var(--space-7);
   }
 
   .hero-preview {
@@ -281,6 +305,14 @@ import MinutesPreview from '../components/MinutesPreview.vue';
     gap: var(--space-5);
   }
 
+  .output-list article,
+  .output-list article:first-child,
+  .output-list article:last-child {
+    padding: var(--space-4) 0 0;
+    border-top: 1px solid var(--color-border);
+    border-left: 0;
+  }
+
   .boundary-inner {
     align-items: flex-start;
     flex-direction: column;
@@ -288,13 +320,25 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 }
 
 @media (max-width: 640px) {
+  .hero-inner {
+    padding-block: var(--space-7) var(--space-6);
+  }
+
   .hero-title {
     max-width: none;
   }
 
   .hero-actions {
-    align-items: flex-start;
+    align-items: stretch;
     flex-direction: column;
+  }
+
+  .hero-actions .button {
+    width: 100%;
+  }
+
+  .hero-actions .text-link {
+    justify-content: center;
   }
 }
 </style>

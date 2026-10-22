@@ -62,7 +62,7 @@
   /* 兼容现有组件里的旧变量名，值已经改为无衬线 */
   --font-display: var(--font-sans);
 
-  --font-size-display: clamp(2.5rem, 4vw, 3.75rem);
+  --font-size-display: clamp(2.5rem, 3.6vw, 3.5rem);
   --font-size-h1: clamp(1.75rem, 2.6vw, 2.5rem);
   --font-size-h2: 1.5rem;
   --font-size-h3: 1.125rem;
