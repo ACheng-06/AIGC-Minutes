@@ -201,7 +201,7 @@ function handleReinput(): void {
         <p>把会议原文整理成可编辑的纪要。先在左侧放入原文，再在右侧逐条校对。</p>
       </header>
 
-      <div v-if="!backendReachable" class="service-status" role="status">
+      <div v-if="!backendReachable" class="service-status service-status--error" role="status">
         <span class="service-dot" aria-hidden="true"></span>
         <p>无法连接后端服务。请确认后端已启动，再刷新页面。</p>
       </div>
@@ -283,13 +283,19 @@ function handleReinput(): void {
   gap: 10px;
   margin-bottom: var(--space-4);
   padding: 12px 16px;
-  border: 1px solid var(--color-warning-soft);
-  border-left: 3px solid var(--color-warning);
+  border: 1px solid var(--color-info-border);
+  border-left: 3px solid var(--color-info);
   border-radius: var(--radius-sm);
-  background: var(--color-warning-soft);
+  background: var(--color-info-soft);
   color: var(--color-fg-strong);
   font-size: var(--font-size-small);
   line-height: 1.6;
+}
+
+.service-status--error {
+  border-color: var(--color-danger-border);
+  border-left-color: var(--color-danger);
+  background: var(--color-danger-soft);
 }
 
 .service-dot {
@@ -298,7 +304,11 @@ function handleReinput(): void {
   height: 8px;
   margin-top: 6px;
   border-radius: 50%;
-  background: var(--color-warning);
+  background: var(--color-info);
+}
+
+.service-status--error .service-dot {
+  background: var(--color-danger);
 }
 
 .service-status p {
@@ -378,10 +388,10 @@ function handleReinput(): void {
 .demo-notice {
   margin-bottom: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-warning-soft);
-  border-left: 3px solid var(--color-warning);
+  border: 1px solid var(--color-info-border);
+  border-left: 3px solid var(--color-info);
   border-radius: var(--radius-sm);
-  background: var(--color-warning-soft);
+  background: var(--color-info-soft);
   color: var(--color-fg-strong);
   font-size: var(--font-size-small);
 }

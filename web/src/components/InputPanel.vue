@@ -231,15 +231,22 @@ function submit(): void {
 }
 
 .input-tabs :deep(.el-tabs__nav) {
+  display: flex;
+  width: 100%;
   gap: 4px;
 }
 
 .input-tabs :deep(.el-tabs__item) {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 12px !important;
   border-radius: var(--radius-xs);
   color: var(--color-fg-muted);
   font-size: var(--font-size-small);
+  text-align: center;
   transition:
     background-color var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out);
