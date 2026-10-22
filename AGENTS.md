@@ -124,9 +124,9 @@ npm run dev / typecheck / test / build / preview
 - P0–P12 与三页 UI/UX 升级（D1–D4）已完成，MVP 可在本地运行并支持单进程静态部署。
 - 页面路由：`/` 首页、`/workspace` 工作台、`/history` 本地记录；设计规范在 `docs/design/ui-ux-spec.md`。
 - 公开仓库：https://github.com/ACheng-06/aigc-minutes（MIT 许可证）。
-- 后端 50 个自动化测试、前端 15 个自动化测试通过；双端 typecheck 与 build 通过（最后核对：2026-10-22）。
+- 后端 50 个自动化测试、前端 19 个自动化测试通过；双端 typecheck 与 build 通过（最后核对：2026-10-22）。
 - Element Plus 已改为按需引入（`unplugin-auto-import` + `unplugin-vue-components`），`web/src/auto-imports.d.ts` 与 `web/src/components.d.ts` 由构建生成并需提交。
 - 单进程部署（`WEB_DIST`）实测页面、SPA 路由、健康检查、API 404；三页界面已用浏览器实测渲染与控制台（无 error/warning），但尚未纳入自动化测试。
-- 示例体验与缓存已实测：首页链接自动填入示例并生成；同一原文二次请求直接命中内存缓存并在元信息行标注「复用上次结果」。
+- 示例体验已实测：进入示例只填入原文，点击生成后才开始；未配置模型时展示内置结果并在结果上方明确标注，改动原文后仍走真实请求。缓存命中与复用提示另行实测。
 - 尚未执行真实模型调用：需要项目所有者配置 `server/.env` 后按 README 的「真实模型冒烟」清单手动验证。
 - 后续改动请继续遵守本文件的范围、类型同步、测试与 Git 规范。

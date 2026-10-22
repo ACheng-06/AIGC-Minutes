@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <figcaption>示例：负责人和日期不明确时保持“未明确”，不会自动补全。</figcaption>
+    <figcaption>提醒：负责人和日期不明确时保持“未明确”，不会自动补全。</figcaption>
   </figure>
 </template>
 

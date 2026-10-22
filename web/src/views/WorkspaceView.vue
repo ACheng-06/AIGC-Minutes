@@ -8,7 +8,7 @@ import { fetchHealth, generateByFile, generateByText } from '../api/minutes';
 import { ApiError, CanceledError } from '../api/http';
 import { saveRecord } from '../composables/useLocalMinutes';
 import { useMinutesStore } from '../composables/useMinutesStore';
-import { DEMO_MEETING_TEXT } from '../data/exampleMeeting';
+import { buildDemoResult, DEMO_MEETING_TEXT, isDemoMeetingText } from '../data/exampleMeeting';
 import type { GenerateInput } from '../types/minutes';
 
 const route = useRoute();
@@ -20,6 +20,10 @@ const aiConfigured = ref(true);
 const inputMode = ref<'input' | 'source'>('input');
 const resultHeading = ref<HTMLElement | null>(null);
 const demoText = ref('');
+/** 演示模式：从示例入口进入后等待用户首次生成；它只决定“未配置时能否用内置结果”。 */
+const demoMode = ref(false);
+/** 当前结果是否来自未配置模型时的内置示例，用于在结果上方明确标注。 */
+const demoFallback = ref(false);
 
 const showSource = computed(() => inputMode.value === 'source' && state.source !== null);
 const inputInitialText = computed(
@@ -44,24 +48,86 @@ onMounted(async () => {
   }
 });
 
-/** 填入示例原文并直接生成，让首次使用者不用准备材料就能看到完整结果。 */
+/** 进入演示：只填入示例原文，是否生成由用户自己点击。 */
 function startDemo(): void {
   demoText.value = DEMO_MEETING_TEXT;
   inputMode.value = 'input';
+  demoMode.value = true;
+  setError('');
+}
 
-  if (!aiConfigured.value) {
-    ElMessage.warning('后端尚未配置模型，示例已填入，配置后即可生成');
+/**
+ * 未配置模型时的示例体验：加载、取消、元信息、编辑与真实生成保持一致，
+ * 只有结果来自内置数据。用户自己输入的原文仍会收到 503，不会被静默替换。
+ */
+async function runDemoFallback(): Promise<void> {
+  activeController?.abort();
+  const controller = new AbortController();
+  activeController = controller;
+
+  setLoading(true);
+  setError('');
+
+  try {
+    // 预留可感知的等待，让加载态和取消按钮与真实流程一致。
+    if (await waitForDemo(controller.signal)) {
+      return;
+    }
+
+    const result = buildDemoResult();
+    setResult(result);
+    demoFallback.value = true;
+    demoText.value = '';
+    setSource({
+      kind: 'text',
+      text: DEMO_MEETING_TEXT,
+      fileName: null,
+      charCount: result.meta.charCount,
+    });
+    inputMode.value = 'source';
+
+    await nextTick();
+    resultHeading.value?.focus();
+  } finally {
+    if (activeController === controller) {
+      activeController = null;
+      setLoading(false);
+    }
+  }
+}
+
+/** 返回 true 表示等待期间用户点了取消。 */
+function waitForDemo(signal: AbortSignal): Promise<boolean> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(false), 900);
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        resolve(true);
+      },
+      { once: true },
+    );
+  });
+}
+
+async function handleGenerate(input: GenerateInput): Promise<void> {
+  // 内置结果只对“演示模式 + 未配置模型 + 原文仍是完整示例”生效；
+  // 用户改过原文或改用文件时必须走真实请求，避免内置结果冒充生成内容。
+  const useDemoResult =
+    demoMode.value &&
+    !aiConfigured.value &&
+    input.type === 'text' &&
+    isDemoMeetingText(input.text);
+
+  // 首次点击生成即消费演示模式；取消或失败后不会再次自动使用内置结果。
+  demoMode.value = false;
+
+  if (useDemoResult) {
+    await runDemoFallback();
     return;
   }
 
-  // 示例只用于体验，不写入本地记录，避免污染用户自己的纪要列表。
-  void handleGenerate({ type: 'text', text: DEMO_MEETING_TEXT }, { skipSave: true });
-}
-
-async function handleGenerate(
-  input: GenerateInput,
-  options: { skipSave?: boolean } = {},
-): Promise<void> {
   activeController?.abort();
   const controller = new AbortController();
   activeController = controller;
@@ -76,6 +142,8 @@ async function handleGenerate(
         : await generateByFile(input.file, controller.signal);
 
     setResult(result);
+    // 真实生成成功后不再展示“内置示例”标注。
+    demoFallback.value = false;
     // 示例文本已经进入 source，后续“重新输入”应回落到真实原文。
     demoText.value = '';
     setSource({
@@ -86,8 +154,9 @@ async function handleGenerate(
     });
     inputMode.value = 'source';
 
-    // 生成成功后自动保存一条本地记录；保存失败不影响当前编辑。
-    if (!options.skipSave) {
+    // 示例只用于体验，不写入本地记录，避免污染用户自己的纪要列表。
+    const isDemoSource = input.type === 'text' && isDemoMeetingText(input.text);
+    if (!isDemoSource) {
       const saved = saveRecord(result.minutes);
       if (saved.record) {
         setRecordId(saved.record.id);
@@ -136,7 +205,7 @@ function handleReinput(): void {
         无法连接后端服务。请确认后端已启动，再刷新页面。
       </p>
       <p v-else-if="!aiConfigured" class="service-status" role="status">
-        后端尚未配置模型。配置 server/.env 中的 LLM 变量并重启后即可生成。
+        后端尚未配置模型：从示例「体验一下」可查看内置结果；输入自己的原文前，请先配置 server/.env 中的 LLM 变量并重启。
       </p>
 
       <div class="workspace-grid">
@@ -158,6 +227,10 @@ function handleReinput(): void {
             <p v-if="state.minutes" class="result-error-note">
               以下是上一次生成的结果，本次请求没有成功。
             </p>
+          </div>
+
+          <div v-if="demoFallback && !state.loading && state.minutes" class="demo-notice" role="status">
+            当前未配置模型，下面是内置示例纪要，仅用于体验编辑、复制与导出。配置 server/.env 后即可生成你自己的纪要。
           </div>
 
           <div v-if="state.loading" class="result-loading" aria-busy="true">
@@ -246,6 +319,15 @@ function handleReinput(): void {
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
+}
+
+.demo-notice {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--color-warning);
+  background: var(--color-warning-soft);
+  color: var(--color-fg-strong);
+  font-size: var(--font-size-small);
 }
 
 .loading-text {

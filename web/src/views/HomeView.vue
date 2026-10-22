@@ -24,7 +24,7 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 
         <div class="hero-preview">
           <MinutesPreview />
-          <router-link class="demo-link" to="/workspace?demo=1">用这段示例生成一份 →</router-link>
+          <router-link class="demo-link" to="/workspace?demo=1">体验一下 →</router-link>
         </div>
       </div>
     </section>

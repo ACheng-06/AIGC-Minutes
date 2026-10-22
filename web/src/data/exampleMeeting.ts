@@ -1,3 +1,5 @@
+import type { GenerateResult, Minutes } from '../types/minutes';
+
 /**
  * 首页“用示例看看效果”使用的会议原文。
  * 刻意包含四类信息：明确决策、没有达成一致的讨论、明确日期，以及模糊日期与缺失负责人。
@@ -22,3 +24,46 @@ export const DEMO_MEETING_TEXT = `产品周会（2026-10-20）
 - 王芳负责准备登录页的两个视觉方案，下周一评审。
 - 李明负责把发布时间调整同步给市场和客服，时间待定。
 - 补充一份发布后的回滚预案。`;
+
+/**
+ * 未配置模型时展示的内置纪要，内容严格对应上面的示例原文。
+ * 每次调用返回新对象，避免用户编辑示例结果时改到模块级常量。
+ */
+export function createDemoMinutes(): Minutes {
+  return {
+    title: '产品周会纪要',
+    summary:
+      '本次产品周会回顾了新版工作台与移动端稿件的进展：新版工作台已完成开发并合并到 main 分支，移动端稿件完成第二轮修改，但登录页视觉方案尚未确定。会议重点讨论了新版首页的发布时间，原计划 10 月 24 日上线，因测试反馈三个阻塞问题，决定推迟到 10 月 29 日，并要求本周五前完成全部修复。登录页视觉方案会上未达成一致，下周一继续讨论。数据埋点需在发布前补齐，由陈静整理字段清单并在 10 月 27 日前给出。用户反馈渠道讨论后决定暂不新增，继续使用现有表单收集。',
+    decisions: [
+      '新版首页推迟到 10 月 29 日上线',
+      '发布前必须修复三个阻塞问题',
+      '暂不新增用户反馈渠道，继续使用现有表单',
+    ],
+    todos: [
+      { task: '修复三个阻塞问题', owner: '张伟', dueDate: '2026-10-28' },
+      { task: '整理埋点字段清单', owner: '陈静', dueDate: '2026-10-27' },
+      { task: '准备登录页的两个视觉方案', owner: '王芳', dueDate: '' },
+      { task: '把发布时间调整同步给市场和客服', owner: '李明', dueDate: '' },
+      { task: '补充一份发布后的回滚预案', owner: '', dueDate: '' },
+    ],
+  };
+}
+
+/** 构造与真实生成一致的结果结构，让界面无需区分数据来源。 */
+export function buildDemoResult(): GenerateResult {
+  return {
+    minutes: createDemoMinutes(),
+    meta: {
+      sourceType: 'text',
+      fileName: null,
+      charCount: DEMO_MEETING_TEXT.length,
+      generatedAt: new Date().toISOString(),
+      cached: false,
+    },
+  };
+}
+
+/** 用户改动任意字符后就不再是示例，不能再用内置结果冒充生成内容。 */
+export function isDemoMeetingText(text: string): boolean {
+  return text.trim() === DEMO_MEETING_TEXT.trim();
+}
