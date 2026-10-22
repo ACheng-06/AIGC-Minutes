@@ -45,7 +45,7 @@ AIGC Minutes 是一个 AI 会议纪要生成与整理工具：粘贴会议原文
 
 ```
 AIGC Minutes/
-├── docs/design/ui-ux-spec.md # 编辑部工作纸方向的设计规范
+├── docs/design/ui-ux-spec.md # 现代 SaaS 工作台设计规范（token、布局、状态、验收）
 ├── server/
 │   ├── .env.example          # 后端环境变量模板（无真实密钥）
 │   ├── src/
@@ -79,7 +79,7 @@ AIGC Minutes/
 
 ## 环境要求与模型准备
 
-- Node.js ≥ 20.19（建议 Node 22 LTS；本项目在 Node 20.19.5 验证）
+- Node.js ≥ 20.19（建议 Node 22 LTS；本项目在 Node 22.20.0 验证）
 - npm ≥ 10
 - 一个支持 `POST {BASE_URL}/chat/completions` 的 OpenAI 兼容服务
 
@@ -285,7 +285,7 @@ npm run preview
 
 - 后端 `typecheck`、`build` 通过；`npm test` 共 **5 个文件 / 50 个用例**通过。
 - 前端 `typecheck`、`build` 通过；`npm test` 共 **5 个文件 / 19 个用例**通过。
-- Element Plus 改为按需引入后，构建主 JS 约 119KB（gzip 约 47KB），最大页面 chunk 约 346KB（gzip 约 115KB），不再触发 500KB 体积提示。
+- Element Plus 改为按需引入后，构建主 JS 约 121KB（gzip 约 47KB），最大页面 chunk 约 351KB（gzip 约 117KB），不再触发 500KB 体积提示。
 - 单进程部署（`WEB_DIST`）实测：`/`、`/workspace`、`/history` 三页渲染正常，Element Plus 组件样式生效，控制台无 error/warning；`/api/health` 正常，未知 `/api` 路径返回 JSON 404。
 
 覆盖范围：Zod 归一化、决策/待办去重与超量裁剪、TXT/DOCX 提取（含 GBK、损坏文件）、AI JSON 解析与一次修复、超时/上游异常、缓存命中与失败不写缓存、输入校验、文件大小、导出 docx、localStorage 上限与配额异常。
@@ -329,7 +329,7 @@ npm start
 
 ## 已知限制
 
-- Element Plus 已改为按需引入（`unplugin-auto-import` + `unplugin-vue-components`），构建主 JS 约 119KB（gzip 约 47KB），最大页面 chunk 约 346KB（gzip 约 115KB），不再触发 500KB 体积提示。
+- Element Plus 已改为按需引入（`unplugin-auto-import` + `unplugin-vue-components`），构建主 JS 约 121KB（gzip 约 47KB），最大页面 chunk 约 351KB（gzip 约 117KB），不再触发 500KB 体积提示。
 - 不做流式输出，生成期间需要等待 10–60 秒，可随时取消。
 - 缓存只在进程内（最多 50 条、30 分钟），多实例不共享，重启后失效；这是为了不落盘保存用户的派生数据。
 - 不做长文档分块，输入上限 30000 字符；超出会明确报错，不会静默截断。
