@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import type { UploadFile, UploadInstance } from 'element-plus';
 import { ACCEPTED_FILE_EXTENSIONS, MAX_FILE_SIZE_MB, MAX_TEXT_CHARS } from '../constants';
 import type { GenerateInput } from '../types/minutes';
@@ -12,6 +12,17 @@ const emit = defineEmits<{
 
 const activeTab = ref<'text' | 'file'>('text');
 const text = ref(props.initialText ?? '');
+
+// 首页示例或“重新输入”会从外部传入新原文；空值不覆盖用户正在编辑的内容。
+watch(
+  () => props.initialText,
+  (value) => {
+    if (value) {
+      text.value = value;
+    }
+  },
+);
+
 const selectedFile = ref<File | null>(null);
 const fileList = ref<UploadFile[]>([]);
 const errorMessage = ref('');

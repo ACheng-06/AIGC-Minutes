@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import InputPanel from '../components/InputPanel.vue';
 import MinutesEditor from '../components/MinutesEditor.vue';
 import SourcePanel from '../components/SourcePanel.vue';
@@ -7,17 +8,23 @@ import { fetchHealth, generateByFile, generateByText } from '../api/minutes';
 import { ApiError, CanceledError } from '../api/http';
 import { saveRecord } from '../composables/useLocalMinutes';
 import { useMinutesStore } from '../composables/useMinutesStore';
+import { DEMO_MEETING_TEXT } from '../data/exampleMeeting';
 import type { GenerateInput } from '../types/minutes';
 
+const route = useRoute();
+const router = useRouter();
 const { state, setResult, setRecordId, setLoading, setError, setSource } = useMinutesStore();
 
 const backendReachable = ref(true);
 const aiConfigured = ref(true);
 const inputMode = ref<'input' | 'source'>('input');
 const resultHeading = ref<HTMLElement | null>(null);
+const demoText = ref('');
 
 const showSource = computed(() => inputMode.value === 'source' && state.source !== null);
-const inputInitialText = computed(() => (state.source?.kind === 'text' ? state.source.text : ''));
+const inputInitialText = computed(
+  () => demoText.value || (state.source?.kind === 'text' ? state.source.text : ''),
+);
 
 // 同一时间只保留一个生成请求；新请求会中止旧请求，避免两次结果互相覆盖。
 let activeController: AbortController | null = null;
@@ -29,9 +36,32 @@ onMounted(async () => {
   } catch {
     backendReachable.value = false;
   }
+
+  if (route.query.demo === '1') {
+    // 先消费参数，刷新页面时不会重复自动生成。
+    await router.replace({ path: '/workspace' });
+    startDemo();
+  }
 });
 
-async function handleGenerate(input: GenerateInput): Promise<void> {
+/** 填入示例原文并直接生成，让首次使用者不用准备材料就能看到完整结果。 */
+function startDemo(): void {
+  demoText.value = DEMO_MEETING_TEXT;
+  inputMode.value = 'input';
+
+  if (!aiConfigured.value) {
+    ElMessage.warning('后端尚未配置模型，示例已填入，配置后即可生成');
+    return;
+  }
+
+  // 示例只用于体验，不写入本地记录，避免污染用户自己的纪要列表。
+  void handleGenerate({ type: 'text', text: DEMO_MEETING_TEXT }, { skipSave: true });
+}
+
+async function handleGenerate(
+  input: GenerateInput,
+  options: { skipSave?: boolean } = {},
+): Promise<void> {
   activeController?.abort();
   const controller = new AbortController();
   activeController = controller;
@@ -46,6 +76,8 @@ async function handleGenerate(input: GenerateInput): Promise<void> {
         : await generateByFile(input.file, controller.signal);
 
     setResult(result);
+    // 示例文本已经进入 source，后续“重新输入”应回落到真实原文。
+    demoText.value = '';
     setSource({
       kind: input.type,
       text: input.type === 'text' ? input.text : '',
@@ -55,12 +87,14 @@ async function handleGenerate(input: GenerateInput): Promise<void> {
     inputMode.value = 'source';
 
     // 生成成功后自动保存一条本地记录；保存失败不影响当前编辑。
-    const saved = saveRecord(result.minutes);
-    if (saved.record) {
-      setRecordId(saved.record.id);
-    }
-    if (saved.error) {
-      ElMessage.warning(saved.error);
+    if (!options.skipSave) {
+      const saved = saveRecord(result.minutes);
+      if (saved.record) {
+        setRecordId(saved.record.id);
+      }
+      if (saved.error) {
+        ElMessage.warning(saved.error);
+      }
     }
 
     await nextTick();
@@ -139,6 +173,7 @@ function handleReinput(): void {
           <div v-else class="empty-result">
             <p class="empty-title">结果会出现在这里</p>
             <p>先在左侧放入会议原文，生成后可以逐条校对、复制或导出 Word。</p>
+            <el-button class="demo-button" @click="startDemo">用示例原文试试</el-button>
           </div>
         </section>
       </div>
@@ -239,6 +274,12 @@ function handleReinput(): void {
   color: var(--color-fg);
   font-family: var(--font-display);
   font-size: var(--font-size-h2);
+}
+
+.demo-button {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: var(--space-2);
 }
 
 @media (max-width: 1000px) {

@@ -22,7 +22,10 @@ import MinutesPreview from '../components/MinutesPreview.vue';
           <p class="hero-note">无需登录，本地记录只保存在当前浏览器。支持 TXT、DOCX，可导出 Word。</p>
         </div>
 
-        <MinutesPreview class="hero-preview" />
+        <div class="hero-preview">
+          <MinutesPreview />
+          <router-link class="demo-link" to="/workspace?demo=1">用这段示例生成一份 →</router-link>
+        </div>
       </div>
     </section>
 
@@ -148,6 +151,20 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 
 .hero-preview {
   min-width: 0;
+}
+
+.demo-link {
+  display: inline-block;
+  margin-top: var(--space-3);
+  color: var(--color-primary);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.demo-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
 }
 
 .steps,

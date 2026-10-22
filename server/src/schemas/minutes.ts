@@ -28,6 +28,8 @@ export interface MinutesMeta {
   fileName: string | null;
   charCount: number;
   generatedAt: string;
+  /** 命中缓存时为 true，前端据此提示“相同原文复用上次结果”。 */
+  cached: boolean;
 }
 
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -98,23 +100,43 @@ export const AiMinutesSchema = z.object({
   ),
 });
 
+/** 只去掉完全相同的条目，保留模型输出的顺序与不同表述。 */
+function uniqueBy<T>(items: T[], getKey: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = getKey(item);
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
 /** 把通过校验的模型输出裁剪到 MVP 允许的条数，并归一化负责人与日期。 */
 export function toMinutes(ai: z.infer<typeof AiMinutesSchema>): Minutes {
-  return {
-    title: ai.title.trim() || DEFAULT_TITLE,
-    summary: ai.summary.trim(),
-    decisions: ai.decisions
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .slice(0, MAX_DECISIONS),
-    todos: ai.todos
+  // 先去重再截断，避免重复项占满 20 条名额。
+  const decisions = uniqueBy(
+    ai.decisions.map((item) => item.trim()).filter(Boolean),
+    (item) => item,
+  ).slice(0, MAX_DECISIONS);
+
+  const todos = uniqueBy(
+    ai.todos
       .map((todo) => ({
         task: todo.task.trim(),
         owner: normalizeOwner(todo.owner),
         dueDate: normalizeDueDate(todo.dueDate),
       }))
-      .filter((todo) => todo.task.length > 0)
-      .slice(0, MAX_TODOS),
+      .filter((todo) => todo.task.length > 0),
+    (todo) => `${todo.task}\u0000${todo.owner}\u0000${todo.dueDate}`,
+  ).slice(0, MAX_TODOS);
+
+  return {
+    title: ai.title.trim() || DEFAULT_TITLE,
+    summary: ai.summary.trim(),
+    decisions,
+    todos,
   };
 }
 

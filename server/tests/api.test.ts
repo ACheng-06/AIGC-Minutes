@@ -5,6 +5,7 @@ import mammoth from 'mammoth';
 import { createApp } from '../src/app';
 import { AppError } from '../src/lib/errors';
 import { generateStructuredMinutes } from '../src/services/ai';
+import { clearMinutesCache } from '../src/services/minutesCache';
 import type { Minutes } from '../src/schemas/minutes';
 
 // 接口测试不访问真实模型：把 AI 模块整体替换成 mock，其余路由与校验逻辑保持真实。
@@ -35,6 +36,8 @@ const aiMinutes: Minutes = {
 
 beforeEach(() => {
   mockedGenerate.mockReset();
+  // 缓存是模块级单例，测试之间必须隔开，否则相同文本会互相命中。
+  clearMinutesCache();
 });
 
 describe('GET /api/health', () => {
@@ -62,6 +65,42 @@ describe('POST /api/minutes/generate', () => {
       fileName: null,
       charCount: 4,
     });
+  });
+
+  it('相同原文第二次请求命中缓存，不再调用模型', async () => {
+    mockedGenerate.mockResolvedValue(aiMinutes);
+
+    const first = await request(app)
+      .post('/api/minutes/generate')
+      .send({ text: '需要缓存的会议原文' });
+    const second = await request(app)
+      .post('/api/minutes/generate')
+      .send({ text: '需要缓存的会议原文' });
+
+    expect(first.status).toBe(200);
+    expect(first.body.data.meta.cached).toBe(false);
+    expect(second.status).toBe(200);
+    expect(second.body.data.meta.cached).toBe(true);
+    expect(second.body.data.minutes).toEqual(aiMinutes);
+    expect(mockedGenerate).toHaveBeenCalledTimes(1);
+  });
+
+  it('生成失败不会写入缓存，下一次仍会调用模型', async () => {
+    mockedGenerate.mockRejectedValueOnce(new AppError('AI_TIMEOUT', 504, '模型响应超时'));
+
+    const failed = await request(app)
+      .post('/api/minutes/generate')
+      .send({ text: '失败后重试的会议原文' });
+    expect(failed.status).toBe(504);
+
+    mockedGenerate.mockResolvedValue(aiMinutes);
+    const retry = await request(app)
+      .post('/api/minutes/generate')
+      .send({ text: '失败后重试的会议原文' });
+
+    expect(retry.status).toBe(200);
+    expect(retry.body.data.meta.cached).toBe(false);
+    expect(mockedGenerate).toHaveBeenCalledTimes(2);
   });
 
   it('空白文本返回 422 EMPTY_CONTENT', async () => {

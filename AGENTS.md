@@ -32,13 +32,14 @@ server/src/
   env.ts            环境变量解析与校验
   routes/           HTTP 路由
   middleware/       上传、统一错误处理
-  services/         extractText / ai / minutes / exportDocx
+  services/         extractText / ai / minutes / minutesCache / exportDocx
   schemas/          Zod 规则（AI 输出与接口共用）
   lib/              错误类型、日志
 web/src/
   api/              axios 实例与接口函数
   components/       SiteHeader、SiteFooter、InputPanel、SourcePanel、MinutesPreview、MinutesEditor
   composables/      useMinutesStore、useLocalMinutes
+  data/             exampleMeeting（首页示例原文）
   views/            HomeView、WorkspaceView、HistoryView
   styles/           tokens.css、main.css
   router/           三页路由与页面标题
@@ -83,8 +84,8 @@ npm run dev / typecheck / test / build / preview
 
 ## 7. 测试与验证
 
-- 后端：Vitest + Supertest，覆盖 Zod 规则、文本提取、AI 解析、三个接口的成功与失败路径。
-- 前端：Vitest 覆盖文本格式化与 localStorage 逻辑。
+- 后端：Vitest + Supertest，覆盖 Zod 规则、确定性后处理、文本提取、AI 解析、缓存、三个接口的成功与失败路径。
+- 前端：Vitest 覆盖文本格式化、localStorage、请求取消与示例原文。
 - 自动化测试不调用真实模型；真实 API 冒烟需手动执行并人工核对。
 - **不得仅凭代码看起来正确就宣称验证通过**：必须实际运行 `npm run typecheck`、`npm test`、`npm run build`，失败时如实报告。
 - 涉及外部依赖或模型服务时，先说明前置条件（账号、密钥、端点），不假设已有。
@@ -123,8 +124,9 @@ npm run dev / typecheck / test / build / preview
 - P0–P12 与三页 UI/UX 升级（D1–D4）已完成，MVP 可在本地运行并支持单进程静态部署。
 - 页面路由：`/` 首页、`/workspace` 工作台、`/history` 本地记录；设计规范在 `docs/design/ui-ux-spec.md`。
 - 公开仓库：https://github.com/ACheng-06/aigc-minutes（MIT 许可证）。
-- 后端 47 个自动化测试、前端 14 个自动化测试通过；双端 typecheck 与 build 通过（最后核对：2026-10-22）。
+- 后端 50 个自动化测试、前端 15 个自动化测试通过；双端 typecheck 与 build 通过（最后核对：2026-10-22）。
 - Element Plus 已改为按需引入（`unplugin-auto-import` + `unplugin-vue-components`），`web/src/auto-imports.d.ts` 与 `web/src/components.d.ts` 由构建生成并需提交。
 - 单进程部署（`WEB_DIST`）实测页面、SPA 路由、健康检查、API 404；三页界面已用浏览器实测渲染与控制台（无 error/warning），但尚未纳入自动化测试。
+- 示例体验与缓存已实测：首页链接自动填入示例并生成；同一原文二次请求直接命中内存缓存并在元信息行标注「复用上次结果」。
 - 尚未执行真实模型调用：需要项目所有者配置 `server/.env` 后按 README 的「真实模型冒烟」清单手动验证。
 - 后续改动请继续遵守本文件的范围、类型同步、测试与 Git 规范。

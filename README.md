@@ -2,7 +2,7 @@
 
 AIGC Minutes 是一个 AI 会议纪要生成与整理工具：粘贴会议原文或上传 TXT/DOCX 文件，后端提取文本并调用大语言模型，整理为结构化纪要（会议摘要、关键决策、待办事项），支持在线编辑、复制和导出 Word。
 
-> 当前状态：MVP 与三页 UI/UX 升级已完成。后端 47 个、前端 14 个自动化测试通过，双端构建成功；真实模型调用需要你自行配置 API Key 后验证。
+> 当前状态：MVP 与三页 UI/UX 升级已完成。后端 50 个、前端 15 个自动化测试通过，双端构建成功；真实模型调用需要你自行配置 API Key 后验证。
 
 ## 功能
 
@@ -16,6 +16,9 @@ AIGC Minutes 是一个 AI 会议纪要生成与整理工具：粘贴会议原文
 - [x] 最近 10 条纪要保存到 localStorage，可载入、删除、清空
 - [x] 统一错误处理：输入校验、文件类型/大小、AI 异常、超时
 - [x] 生成中可随时取消；取消后保留输入与上一次结果
+- [x] 首页与空态提供示例原文，一键填入并自动生成，零准备看到完整结果
+- [x] 相同原文 + 相同模型命中服务端内存缓存，30 分钟内秒回并标注「复用上次结果」
+- [x] 确定性后处理：完全重复的决策/待办去重、超量条目裁剪、占位负责人与非法日期归一
 - [x] 可选单进程部署（后端同时托管前端构建产物）
 
 明确不做：登录注册、数据库、Redis/消息队列/微服务、多人协作、权限系统、RAG/向量库、长文档分块、管理后台、PDF/OCR、流式输出。
@@ -32,7 +35,7 @@ AIGC Minutes 是一个 AI 会议纪要生成与整理工具：粘贴会议原文
 
 ## 页面结构
 
-- `/`：首页。说明产品价值、展示“原文 → 摘要 / 决策 / 待办”的结构示例，并提供进入工作台的入口；不放输入框。
+- `/`：首页。说明产品价值、展示“原文 → 摘要 / 决策 / 待办”的结构示例，并提供「用这段示例生成一份」与进入工作台的入口；不放输入框。
 - `/workspace`：工作台。桌面端左侧输入或原文参考，右侧编辑纪要；窄屏上下堆叠。
 - `/history`：本地记录。以档案索引展示最近 10 条纪要，支持载入、单条删除和清空。
 
@@ -51,16 +54,17 @@ AIGC Minutes/
 │   │   ├── env.ts            # 环境变量解析与校验
 │   │   ├── routes/           # /api/minutes 路由
 │   │   ├── middleware/       # 上传、统一错误处理
-│   │   ├── services/         # 文本提取、AI 调用、编排、Word 导出
+│   │   ├── services/         # 文本提取、AI 调用、编排、结果缓存、Word 导出
 │   │   ├── schemas/          # Zod 规则（AI 输出与接口共用）
 │   │   └── lib/              # AppError、日志
-│   └── tests/                # 47 个后端测试
+│   └── tests/                # 50 个后端测试
 ├── web/
 │   ├── .env.example          # 前端环境变量模板
 │   └── src/
 │       ├── api/              # axios 实例与接口函数
 │       ├── components/       # 站点头尾、输入/原文、纪要预览与编辑器
 │       ├── composables/      # 当前纪要状态、localStorage 历史
+│       ├── data/             # 首页示例会议原文
 │       ├── views/            # HomeView、WorkspaceView、HistoryView
 │       ├── styles/           # tokens.css、main.css
 │       ├── router/           # 三页路由与标题
@@ -214,13 +218,16 @@ curl.exe http://localhost:3000/api/health
       "sourceType": "file",
       "fileName": "weekly.docx",
       "charCount": 1842,
-      "generatedAt": "2026-10-18T08:00:00.000Z"
+      "generatedAt": "2026-10-18T08:00:00.000Z",
+      "cached": false
     }
   }
 }
 ```
 
 `owner` / `dueDate` 为空字符串表示未明确；`dueDate` 只接受 `YYYY-MM-DD`，其他写法会被归一为空。
+
+`cached: true` 表示命中服务端内存缓存（原文与模型都相同，30 分钟内），此时 `generatedAt` 是首次生成时间。
 
 ### `POST /api/minutes/export`
 
@@ -276,12 +283,14 @@ npm run preview
 
 **最近一次实际验证（2026-10-22）：**
 
-- 后端 `typecheck`、`build` 通过；`npm test` 共 **5 个文件 / 47 个用例**通过。
-- 前端 `typecheck`、`build` 通过；`npm test` 共 **4 个文件 / 14 个用例**通过。
+- 后端 `typecheck`、`build` 通过；`npm test` 共 **5 个文件 / 50 个用例**通过。
+- 前端 `typecheck`、`build` 通过；`npm test` 共 **5 个文件 / 15 个用例**通过。
 - Element Plus 改为按需引入后，构建主 JS 约 119KB（gzip 约 47KB），最大页面 chunk 约 346KB（gzip 约 115KB），不再触发 500KB 体积提示。
 - 单进程部署（`WEB_DIST`）实测：`/`、`/workspace`、`/history` 三页渲染正常，Element Plus 组件样式生效，控制台无 error/warning；`/api/health` 正常，未知 `/api` 路径返回 JSON 404。
 
-覆盖范围：Zod 归一化、TXT/DOCX 提取（含 GBK、损坏文件）、AI JSON 解析与一次修复、超时/上游异常、输入校验、文件大小、导出 docx、localStorage 上限与配额异常。
+覆盖范围：Zod 归一化、决策/待办去重与超量裁剪、TXT/DOCX 提取（含 GBK、损坏文件）、AI JSON 解析与一次修复、超时/上游异常、缓存命中与失败不写缓存、输入校验、文件大小、导出 docx、localStorage 上限与配额异常。
+
+示例流程与缓存已在浏览器实测（2026-10-22，模型用本地延迟 3 秒的 mock）：首次点击示例出现加载态并在 3 秒后出结果；再次点击同一示例无骨架屏、直接显示结果并标注「相同原文，复用上次结果」；控制台无 error/warning。
 
 **真实模型冒烟（需要你的 Key，未在本机执行）：**
 
@@ -322,6 +331,7 @@ npm start
 
 - Element Plus 已改为按需引入（`unplugin-auto-import` + `unplugin-vue-components`），构建主 JS 约 119KB（gzip 约 47KB），最大页面 chunk 约 346KB（gzip 约 115KB），不再触发 500KB 体积提示。
 - 不做流式输出，生成期间需要等待 10–60 秒，可随时取消。
+- 缓存只在进程内（最多 50 条、30 分钟），多实例不共享，重启后失效；这是为了不落盘保存用户的派生数据。
 - 不做长文档分块，输入上限 30000 字符；超出会明确报错，不会静默截断。
 - localStorage 最多 10 条，共用电脑时请及时清空。
 - 未实现自动重试、限流、鉴权；AI 调用失败由用户手动重试。

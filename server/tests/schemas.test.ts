@@ -61,6 +61,22 @@ describe('AiMinutesSchema / toMinutes', () => {
     expect(minutes.decisions).toHaveLength(20);
     expect(minutes.todos).toEqual([{ task: '联调', owner: '', dueDate: '' }]);
   });
+
+  it('去掉完全相同的决策与待办，保留首次出现', () => {
+    const parsed = AiMinutesSchema.parse({
+      summary: '会议摘要',
+      decisions: [' 上线 ', '上线', ' 延期 '],
+      todos: [
+        { task: '联调', owner: '张三', dueDate: '2026-10-23' },
+        { task: ' 联调 ', owner: '张三', dueDate: '2026-10-23' },
+        { task: '联调', owner: '李四', dueDate: '2026-10-23' },
+      ],
+    });
+
+    const minutes = toMinutes(parsed);
+    expect(minutes.decisions).toEqual(['上线', '延期']);
+    expect(minutes.todos).toHaveLength(2);
+  });
 });
 
 describe('MinutesSchema', () => {

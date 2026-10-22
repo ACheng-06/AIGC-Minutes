@@ -231,6 +231,7 @@ function handleSaveLocal(): void {
     <p v-if="state.meta" class="editor-meta">
       {{ state.meta.sourceType === 'file' ? state.meta.fileName ?? '上传文件' : '粘贴文本' }} ·
       {{ state.meta.charCount.toLocaleString('zh-CN') }} 字符
+      <span v-if="state.meta.cached" class="meta-cached">· 相同原文，复用上次结果</span>
     </p>
     <p class="sr-only" aria-live="polite">{{ liveMessage }}</p>
 
@@ -405,6 +406,10 @@ function handleSaveLocal(): void {
   margin-top: var(--space-2);
   color: var(--color-fg-muted);
   font-size: var(--font-size-caption);
+}
+
+.meta-cached {
+  color: var(--color-primary);
 }
 
 .editor-section {

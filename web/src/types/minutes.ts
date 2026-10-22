@@ -16,6 +16,8 @@ export interface MinutesMeta {
   fileName: string | null;
   charCount: number;
   generatedAt: string;
+  /** 命中服务端缓存时为 true，界面提示“相同原文复用上次结果”。 */
+  cached: boolean;
 }
 
 export interface GenerateResult {
