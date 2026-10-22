@@ -4,7 +4,7 @@
  * 现代 SaaS 方向：冷净浅灰底、白色内容面、深墨文字、单一蓝色强调。
  * 组件不要直接写十六进制颜色；新增颜色先加到这一层。
  */
-:root {
+html:root {
   color-scheme: light;
 
   /* Primitive: 中性色 */

@@ -104,11 +104,14 @@ function submit(): void {
 <template>
   <section class="input-panel" :aria-busy="loading" aria-labelledby="input-title">
     <div class="panel-heading">
-      <h2 id="input-title">输入会议原文</h2>
-      <p>粘贴文本，或上传一个 TXT、DOCX 文件。原文越完整，整理结果越可靠。</p>
+      <span class="panel-step" aria-hidden="true">01</span>
+      <div class="panel-heading-copy">
+        <h2 id="input-title">输入会议原文</h2>
+        <p>粘贴文本，或上传一个 TXT、DOCX 文件。原文越完整，整理结果越可靠。</p>
+      </div>
     </div>
 
-    <el-tabs v-model="activeTab">
+    <el-tabs v-model="activeTab" class="input-tabs">
       <el-tab-pane label="粘贴文本" name="text">
         <label class="field-label" for="meeting-text">会议原文</label>
         <el-input
@@ -117,7 +120,7 @@ function submit(): void {
           name="meeting-text"
           autocomplete="off"
           type="textarea"
-          :rows="12"
+          :rows="9"
           resize="vertical"
           :disabled="loading"
           aria-describedby="meeting-text-help"
@@ -179,45 +182,95 @@ function submit(): void {
 .input-panel {
   padding: var(--space-5);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .panel-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
   margin-bottom: var(--space-5);
 }
 
-.panel-heading h2 {
-  font-size: var(--font-size-h2);
+.panel-step {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.panel-heading p {
-  margin-top: var(--space-2);
+.panel-heading-copy h2 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.panel-heading-copy p {
+  margin-top: var(--space-1);
   color: var(--color-fg-muted);
   font-size: var(--font-size-small);
+  line-height: 1.6;
 }
 
-.input-panel :deep(.el-tabs__header) {
+.input-tabs :deep(.el-tabs__header) {
   margin-bottom: var(--space-4);
 }
 
-.input-panel :deep(.el-tabs__item) {
-  min-height: 44px;
+.input-tabs :deep(.el-tabs__nav-wrap::after),
+.input-tabs :deep(.el-tabs__active-bar) {
+  display: none;
+}
+
+.input-tabs :deep(.el-tabs__nav) {
+  gap: 4px;
+}
+
+.input-tabs :deep(.el-tabs__item) {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-xs);
+  color: var(--color-fg-muted);
   font-size: var(--font-size-small);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.input-tabs :deep(.el-tabs__item.is-active) {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .input-panel :deep(.el-textarea__inner) {
+  min-height: 200px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-body);
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .input-panel :deep(.el-upload-dragger) {
   padding: var(--space-6) var(--space-4);
-  border-color: var(--color-border);
+  border-color: var(--color-border-strong);
+  border-radius: var(--radius-sm);
   background: var(--color-surface-subtle);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
 }
 
 .input-panel :deep(.el-upload-dragger:hover) {
   border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 .file-hint {
@@ -260,10 +313,13 @@ function submit(): void {
 
 .input-actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3) var(--space-5);
+  flex-direction: column;
+  gap: var(--space-2);
   margin-top: var(--space-5);
+}
+
+.generate-button {
+  width: 100%;
 }
 
 .input-actions :deep(.el-button) {
@@ -271,9 +327,9 @@ function submit(): void {
 }
 
 .action-tip {
-  max-width: 36ch;
   color: var(--color-fg-muted);
   font-size: var(--font-size-caption);
+  line-height: 1.5;
 }
 
 @media (max-width: 640px) {
@@ -281,9 +337,8 @@ function submit(): void {
     padding: var(--space-4);
   }
 
-  .input-actions {
-    align-items: flex-start;
-    flex-direction: column;
+  .panel-heading {
+    gap: var(--space-2);
   }
 }
 </style>

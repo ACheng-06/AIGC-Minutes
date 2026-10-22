@@ -349,15 +349,17 @@ function handleSaveLocal(): void {
 .editor-sheet {
   padding: var(--space-5);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .editor-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-3);
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -377,27 +379,39 @@ function handleSaveLocal(): void {
 }
 
 .title-input :deep(.el-input__inner) {
-  height: 44px;
+  height: 40px;
   color: var(--color-fg);
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 
 .status-tag {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: 28px;
-  padding: 3px 8px;
-  border: 1px solid var(--color-border);
-  color: var(--color-fg-muted);
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--color-success-soft);
+  color: var(--color-success);
   font-size: var(--font-size-caption);
+  font-weight: 600;
   white-space: nowrap;
 }
 
+.status-tag::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: '';
+}
+
 .status-tag.is-dirty {
-  border-color: var(--color-warning);
   background: var(--color-warning-soft);
   color: var(--color-warning);
 }
@@ -413,7 +427,7 @@ function handleSaveLocal(): void {
 }
 
 .editor-section {
-  padding-top: var(--space-4);
+  padding-top: var(--space-5);
   margin-top: var(--space-5);
   border-top: 1px solid var(--color-border);
 }
@@ -431,12 +445,19 @@ function handleSaveLocal(): void {
 }
 
 .section-heading h3 {
-  font-size: var(--font-size-h3);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.section-heading :deep(.el-button) {
+  min-height: 32px;
+  font-size: var(--font-size-small);
 }
 
 .decision-list {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .decision-row {
@@ -444,6 +465,14 @@ function handleSaveLocal(): void {
   grid-template-columns: 24px minmax(0, 1fr) auto;
   gap: var(--space-2);
   align-items: center;
+  margin-inline: -8px;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.decision-row:hover {
+  background: var(--color-surface-subtle);
 }
 
 .decision-index {
@@ -454,13 +483,18 @@ function handleSaveLocal(): void {
 
 .line-input {
   width: 100%;
-  padding: 10px 0;
+  padding: 9px 0;
   border: 0;
   border-bottom: 1px solid var(--color-border);
   border-radius: 0;
   background: transparent;
   color: var(--color-fg);
   font-size: var(--font-size-body);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.line-input:hover {
+  border-bottom-color: var(--color-border-strong);
 }
 
 .line-input::placeholder {
@@ -474,13 +508,18 @@ function handleSaveLocal(): void {
 }
 
 .empty-state {
-  padding: var(--space-3) 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
   color: var(--color-fg-muted);
   font-size: var(--font-size-small);
 }
 
 .todo-table-wrap {
   overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
 .todo-table {
@@ -528,7 +567,7 @@ function handleSaveLocal(): void {
   justify-content: space-between;
   gap: var(--space-3);
   padding-top: var(--space-4);
-  margin-top: var(--space-5);
+  margin-top: var(--space-6);
   border-top: 1px solid var(--color-border);
 }
 
@@ -540,12 +579,14 @@ function handleSaveLocal(): void {
 
 .action-buttons :deep(.el-button) {
   min-height: 44px;
+  border-radius: var(--radius-xs);
 }
 
 .actions-tip {
   max-width: 38ch;
   color: var(--color-fg-muted);
   font-size: var(--font-size-caption);
+  line-height: 1.6;
 }
 
 @media (max-width: 720px) {
@@ -568,6 +609,10 @@ function handleSaveLocal(): void {
 
   .action-buttons {
     width: 100%;
+  }
+
+  .action-buttons :deep(.el-button) {
+    flex: 1 1 auto;
   }
 }
 </style>

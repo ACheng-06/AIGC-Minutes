@@ -1,5 +1,20 @@
 <script setup lang="ts">
 import MinutesPreview from '../components/MinutesPreview.vue';
+
+function scrollToSteps(event: MouseEvent): void {
+  const target = document.getElementById('steps');
+  if (!target) {
+    return;
+  }
+
+  event.preventDefault();
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  target.scrollIntoView({
+    behavior: reduceMotion ? 'auto' : 'smooth',
+    block: 'start',
+  });
+  window.history.replaceState(null, '', '#steps');
+}
 </script>
 
 <template>
@@ -36,7 +51,7 @@ import MinutesPreview from '../components/MinutesPreview.vue';
             <li>摘要 · 决策 · 待办</li>
             <li>可导出 Word</li>
           </ul>
-          <a class="scroll-cue" href="#steps">了解工作方式 <span aria-hidden="true">↓</span></a>
+          <a class="scroll-cue" href="#steps" @click="scrollToSteps">了解工作方式 <span aria-hidden="true">↓</span></a>
         </div>
       </div>
     </section>
@@ -435,6 +450,8 @@ import MinutesPreview from '../components/MinutesPreview.vue';
 
   .hero-title {
     max-width: none;
+    font-size: clamp(2rem, 9vw, 2.75rem);
+    line-height: 1.1;
   }
 
   .hero-actions {

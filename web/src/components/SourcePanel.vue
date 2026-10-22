@@ -41,7 +41,9 @@ const emit = defineEmits<{
 .source-panel {
   padding: var(--space-5);
   border: 1px solid var(--color-border);
-  background: var(--color-surface-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
 }
 
 .source-heading {
@@ -49,12 +51,13 @@ const emit = defineEmits<{
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
-  padding-bottom: var(--space-3);
+  padding-bottom: var(--space-4);
   border-bottom: 1px solid var(--color-border);
 }
 
 .source-heading h2 {
-  font-size: var(--font-size-h3);
+  font-size: 1.25rem;
+  line-height: 1.3;
 }
 
 .source-meta {
@@ -65,26 +68,32 @@ const emit = defineEmits<{
 
 .source-reinput {
   flex-shrink: 0;
-  min-height: 44px;
-  padding: 8px 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-primary);
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-fg-strong);
   font-size: var(--font-size-small);
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
 }
 
 .source-reinput:hover {
-  color: var(--color-primary-hover);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-subtle);
 }
 
 .source-text {
-  max-height: 420px;
-  padding: var(--space-4) 0 0;
-  margin: 0;
+  max-height: 380px;
+  padding: var(--space-4);
+  margin: var(--space-4) 0 0;
   overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
   color: var(--color-fg-strong);
   font-size: var(--font-size-small);
   line-height: 1.8;
@@ -93,7 +102,11 @@ const emit = defineEmits<{
 }
 
 .source-file {
-  padding-top: var(--space-4);
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
 }
 
 .source-file-label {
@@ -118,6 +131,7 @@ const emit = defineEmits<{
   margin-top: var(--space-4);
   color: var(--color-fg-muted);
   font-size: var(--font-size-caption);
+  line-height: 1.6;
 }
 
 @media (max-width: 640px) {
